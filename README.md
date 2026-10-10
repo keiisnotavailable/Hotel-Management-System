@@ -8,9 +8,56 @@ Guest-facing Hotel Transylvania homepage recreated in a flat gothic resort style
 - Dracula crypt and suite cards
 - Gothic sanctuary story section
 
+## Project structure
+
+```text
+client/   React + Vite + Tailwind guest frontend
+server/   Express + Mongoose + JWT authentication API
+```
+
 ## Run locally
 
+Install both app dependencies:
+
 ```bash
-npm install
-npm run dev
+npm install --prefix client
+npm install --prefix server
 ```
+
+Create `server/.env` from `server/.env.example`. Never commit the MongoDB
+connection string or JWT secret.
+
+Use your Atlas connection string as the value of `MONGO_URI`, adding a database
+name to the path if your copied URL does not already include one:
+
+```env
+MONGO_URI=mongodb+srv://<username>:<password>@<cluster-host>/hotel_transylvania?retryWrites=true&w=majority
+```
+
+The connection string shared during setup contained a live password. Rotate that
+Atlas database password before using this project or sharing the repository.
+
+Start the API:
+
+```bash
+npm run server
+```
+
+Start the frontend in a second terminal:
+
+```bash
+npm run client
+```
+
+The API health check is available at `http://localhost:5000/api/health`.
+
+## Authentication
+
+The homepage modal now calls:
+
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+
+Successful authentication stores the returned JWT and public user profile in
+the browser. Passwords are hashed with `bcryptjs` and are never returned by the
+API.

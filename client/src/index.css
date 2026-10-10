@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #221b20;
+  background: #f1eadb;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; min-width: 320px; background: #f1eadb; }
+button, select { font: inherit; }
+button { cursor: pointer; }
+option { background: #17141b; color: #f1eadb; }
+
+.hero {
+  background:
+    linear-gradient(180deg, rgba(9, 8, 13, 0.18), rgba(9, 8, 13, 0.78)),
+    var(--hero-image) center / cover no-repeat;
+}
+
+.auth-overlay {
+  background: rgba(6, 5, 10, 0.58);
+  backdrop-filter: blur(3px);
+}
+
+.auth-modal {
+  background:
+    linear-gradient(135deg, rgba(48, 49, 62, 0.46), rgba(16, 17, 27, 0.58)),
+    var(--hero-image) center / cover;
+  border-radius: 1.25rem;
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px) saturate(115%);
+}
+
+.auth-input {
+  width: 100%;
+  border: 0;
+  border-radius: 0.65rem;
+  background: rgba(12, 13, 22, 0.38);
+  padding: 0.7rem 0.75rem;
+  color: #f1eadb;
+  font-size: 0.75rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  outline: none;
+  backdrop-filter: blur(10px);
+}
+
+.auth-input::placeholder {
+  color: rgba(241, 234, 219, 0.5);
+}
+
+.auth-input:focus {
+  background: rgba(25, 22, 38, 0.56);
+  box-shadow: inset 0 0 0 1px rgba(199, 108, 176, 0.5);
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.7;
+  background:
+    linear-gradient(90deg, transparent 7%, rgba(8, 7, 11, 0.7) 7.5%, transparent 8%),
+    linear-gradient(90deg, transparent 90%, rgba(8, 7, 11, 0.7) 90.5%, transparent 91%),
+    repeating-linear-gradient(90deg, transparent 0 18%, rgba(116, 91, 93, 0.15) 18.2% 18.5%, transparent 18.7% 36%);
+}
+
+.paper-texture {
+  background:
+    radial-gradient(circle at 12% 20%, rgba(107, 76, 58, 0.08) 0 1px, transparent 2px),
+    radial-gradient(circle at 75% 70%, rgba(107, 76, 58, 0.07) 0 1px, transparent 2px),
+    #f1eadb;
+  background-size: 17px 17px, 23px 23px, auto;
+}
+
+.bat-mark {
+  display: grid;
+  width: 48px;
+  height: 34px;
+  place-items: center;
+  border-radius: 50% 50% 45% 45%;
+  background: #241b2b;
+  color: #f1eadb;
+}
+
+.sanctuary-image {
+  background: radial-gradient(ellipse at 50% 45%, #514354, #191720 72%);
+  border: 10px solid #211a20;
+}
+
+.room-illustration {
+  position: relative;
+  height: 150px;
+  overflow: hidden;
+  background-color: #302532;
+}
+
+.room-illustration::before,
+.room-illustration::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid rgba(229, 215, 191, 0.35);
+  background: #121117;
+}
+
+.room-illustration::before { width: 90px; height: 112px; border-radius: 46px 46px 0 0; }
+.room-illustration::after { width: 30px; height: 38px; bottom: 28px; border-width: 2px; background: rgba(242, 235, 221, 0.12); }
+.den { background: linear-gradient(145deg, #41363b, #16151b); }
+.tower { background: linear-gradient(145deg, #403c48, #16151b); }
+.penthouse { background: linear-gradient(145deg, #563c4c, #17131b); }

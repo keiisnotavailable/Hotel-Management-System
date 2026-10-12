@@ -15,8 +15,12 @@ export default function Navbar({ onAuth }) {
   const [open, setOpen] = useState(null)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [profilePhoto, setProfilePhoto] = useState(() => localStorage.getItem('moonstoriaProfilePhoto') || '')
 
   useEffect(() => {
+    function updateProfilePhoto() {
+      setProfilePhoto(localStorage.getItem('moonstoriaProfilePhoto') || '')
+    }
     function updateScrolled() {
       setScrolled(window.scrollY > 20)
     }
@@ -26,9 +30,11 @@ export default function Navbar({ onAuth }) {
     updateScrolled()
     window.addEventListener('scroll', updateScrolled, { passive: true })
     document.addEventListener('keydown', closeOnEscape)
+    window.addEventListener('moonstoria-profile-photo', updateProfilePhoto)
     return () => {
       window.removeEventListener('scroll', updateScrolled)
       document.removeEventListener('keydown', closeOnEscape)
+      window.removeEventListener('moonstoria-profile-photo', updateProfilePhoto)
     }
   }, [])
 
@@ -59,7 +65,7 @@ export default function Navbar({ onAuth }) {
         <NavLink to="/crypts" label="Rooms" active={isActive('/crypts')} />
         <NavLink to="/contact" label="Contact" active={isActive('/contact')} />
       </div>
-      {user ? <div className="navbar-account"><button className="account-button" type="button" onClick={() => setOpen(open === 'account' ? null : 'account')} aria-expanded={open === 'account'} aria-haspopup="menu" aria-controls="navbar-account-menu"><UserCircle size={18} /> {user.name}</button>{open === 'account' && <div id="navbar-account-menu" className="navbar-menu account-menu" role="menu"><Link role="menuitem" to="/profile" onClick={closeMenus}>Profile</Link><Link role="menuitem" to="/my-reservations" onClick={closeMenus}>My Reservations</Link><Link role="menuitem" to="/saved-crypts" onClick={closeMenus}>Saved Crypts</Link><button role="menuitem" type="button" onClick={logout}>Sign Out</button></div>}</div> : <button className="account-button" type="button" onClick={openAuth}>Sign in / Sign up</button>}
+      {user ? <div className="navbar-account"><button className="account-button" type="button" onClick={() => setOpen(open === 'account' ? null : 'account')} aria-expanded={open === 'account'} aria-haspopup="menu" aria-controls="navbar-account-menu">{profilePhoto ? <img src={profilePhoto} alt="" className="navbar-profile-photo" /> : <UserCircle size={18} />} <span>{user.name}</span></button>{open === 'account' && <div id="navbar-account-menu" className="navbar-menu account-menu" role="menu"><Link role="menuitem" to="/profile" onClick={closeMenus}>Profile</Link><Link role="menuitem" to="/my-reservations" onClick={closeMenus}>My Reservations</Link><Link role="menuitem" to="/saved-crypts" onClick={closeMenus}>Saved Crypts</Link><button role="menuitem" type="button" onClick={logout}>Sign Out</button></div>}</div> : <button className="account-button" type="button" onClick={openAuth}>Sign in / Sign up</button>}
       <button className="navbar-toggle" type="button" onClick={() => setMobileOpen(!mobileOpen)} aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={mobileOpen} aria-controls="navbar-mobile-panel">{mobileOpen ? <X size={20} /> : <Menu size={20} />}</button>
     </div>
     {mobileOpen && <div id="navbar-mobile-panel" className="navbar-mobile-panel">

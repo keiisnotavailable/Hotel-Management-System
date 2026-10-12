@@ -15,14 +15,16 @@ function publicUser(user) {
     id: user._id,
     name: user.name,
     email: user.email,
-    monsterType: user.monsterType,
     role: user.role,
     centuryLoyaltyPoints: user.centuryLoyaltyPoints,
+    phone: user.phone,
+    address: user.address,
+    profileImage: user.profileImage,
   }
 }
 
 export async function register(req, res) {
-  const { name, email, password, monsterType } = req.body
+  const { name, email, password } = req.body
   if (!name || !email || !password) {
     return res.status(400).json({ message: 'Name, email, and password are required.' })
   }
@@ -41,7 +43,6 @@ export async function register(req, res) {
     name: name.trim(),
     email: normalizedEmail,
     password: hashedPassword,
-    monsterType: monsterType || 'Unknown',
   })
 
   return res.status(201).json({ user: publicUser(user), token: createToken(user) })

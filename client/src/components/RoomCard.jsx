@@ -5,6 +5,7 @@ import axios from 'axios'
 import { API_BASE, authConfig, getErrorMessage } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { getRoomImage } from '../utils/roomImages'
+import { formatPHP } from '../lib/currency'
 
 export default function RoomCard({ room, saved = false, onSaved, featured = false, onAuth }) {
   const { user } = useAuth()
@@ -38,7 +39,7 @@ export default function RoomCard({ room, saved = false, onSaved, featured = fals
     <article className={`room-card group overflow-hidden border border-ink/50 bg-[#211a20] text-parchment outline-none transition hover:-translate-y-1 hover:border-gold focus-visible:ring-2 focus-visible:ring-gold ${featured ? 'min-w-0' : ''}`} tabIndex="0" role="link" onClick={openRoom} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openRoom() } }}>
       <div className="relative h-48 overflow-hidden bg-[#302532]">
         {image && !imageFailed ? <img src={image} alt={`${room.name} interior`} onError={() => setImageFailed(true)} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" /> : <div className="room-illustration h-full"><span className="absolute inset-0 grid place-items-center font-display text-4xl text-gold/60">☾</span></div>}
-        <span className="absolute right-2 top-2 bg-[#211a20] px-2 py-1 text-[8px] font-bold">${room.pricePerNight} / NIGHT</span>
+        <span className="absolute right-2 top-2 bg-[#211a20] px-2 py-1 text-[8px] font-bold">{formatPHP(room.pricePerNight)} / NIGHT</span>
         <button type="button" aria-label={isSaved ? 'Remove from saved crypts' : 'Save crypt'} className="absolute left-3 top-3 rounded-full bg-[#211a20]/80 p-2 text-gold hover:bg-wine" onClick={toggleSaved}><Heart size={15} fill={isSaved ? 'currentColor' : 'none'} /></button>
       </div>
       <div className="p-4">

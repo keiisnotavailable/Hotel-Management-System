@@ -23,7 +23,10 @@ const imageMap = {
 }
 
 export function getRoomImages(room) {
-  return (room?.images || []).map((key) => imageMap[key]).filter(Boolean)
+  const keys = room?.images?.length
+    ? room.images
+    : [room?.slug?.replace(/^the-/, '')]
+  return keys.map((key) => imageMap[key]).filter(Boolean)
 }
 
 export function getRoomImage(room) {

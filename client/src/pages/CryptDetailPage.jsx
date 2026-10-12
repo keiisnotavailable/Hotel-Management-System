@@ -3,12 +3,12 @@ import axios from 'axios'
 import { ArrowLeft, ArrowRight, BedDouble, CalendarDays, Check, ChevronLeft, ChevronRight, Heart, Maximize2, Sparkles, Star, Users, X } from 'lucide-react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import DateTimePicker from '../components/DateTimePicker'
-import Navbar from '../components/Navbar'
 import Toast from '../components/Toast'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE, authConfig, getErrorMessage } from '../lib/api'
 import { defaultLocalDateTime, formatDateTime, validateDateRange } from '../lib/date'
 import { getRoomImages } from '../utils/roomImages'
+import { formatPHP } from '../lib/currency'
 
 function Placeholder({ name }) {
   return <div className="room-detail-placeholder" role="img" aria-label={`${name} interior placeholder`}><span>☾</span></div>
@@ -102,7 +102,7 @@ export default function CryptDetailPage({ onAuth }) {
     setSubmitting(true); setError('')
     try {
       const { data } = await axios.post(`${API_BASE}/reservations`, { room: room.id || room._id, checkIn: new Date(booking.checkIn).toISOString(), checkOut: new Date(booking.checkOut).toISOString(), guests: Number(booking.guests), specialRequests }, authConfig())
-      setMessage(`Reservation confirmed for ${data.reservation.nights} night(s), totaling $${data.reservation.totalPrice}.`)
+      setMessage(`Reservation confirmed for ${data.reservation.nights} night(s), totaling ${formatPHP(data.reservation.totalPrice)}.`)
       setAvailability({ available: true })
     } catch (requestError) {
       if (requestError.response?.status === 409) setAvailability(null)
@@ -114,10 +114,10 @@ export default function CryptDetailPage({ onAuth }) {
     setBooking((current) => ({ ...current, guests: Math.min(room.capacity, Math.max(1, Number(current.guests) + amount)) }))
   }
 
-  if (loading) return <><Navbar onAuth={onAuth} /><main className="paper-texture min-h-screen px-5 py-10 text-center"><div className="detail-skeleton mx-auto max-w-6xl" /></main></>
-  if (!room) return <><Navbar onAuth={onAuth} /><main className="paper-texture flex min-h-screen items-center justify-center px-5 text-center"><div><h1 className="font-display text-4xl uppercase">Crypt not found</h1><p className="mt-3 text-sm text-ink/65">That chamber has vanished into the mist.</p><Link to="/crypts" className="mt-6 inline-block bg-ink px-5 py-3 text-xs uppercase tracking-widest text-parchment">Back to crypts</Link></div></main></>
+  if (loading) return <main className="paper-texture min-h-screen px-5 py-10 text-center"><div className="detail-skeleton mx-auto max-w-6xl" /></main>
+  if (!room) return <main className="paper-texture flex min-h-screen items-center justify-center px-5 text-center"><div><h1 className="font-display text-4xl uppercase">Crypt not found</h1><p className="mt-3 text-sm text-ink/65">That chamber has vanished into the mist.</p><Link to="/crypts" className="mt-6 inline-block bg-ink px-5 py-3 text-xs uppercase tracking-widest text-parchment">Back to crypts</Link></div></main>
 
-  return <><Navbar onAuth={onAuth} /><main className="paper-texture min-h-screen px-5 pb-24 pt-10 sm:px-10 lg:px-16">
+  return <main className="paper-texture min-h-screen px-5 pb-24 pt-10 sm:px-10 lg:px-16">
     <div className="mx-auto max-w-6xl">
       <div className="flex flex-wrap items-center justify-between gap-3 text-xs uppercase tracking-widest text-ink/60"><div><Link to="/" className="hover:text-crimson">Home</Link><span className="mx-2">/</span><Link to="/crypts" className="hover:text-crimson">Crypts</Link><span className="mx-2">/</span><span>{room.name}</span></div><button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 hover:text-crimson"><ArrowLeft size={14} /> Back to crypts</button></div>
       <div className="mt-8 grid gap-10 lg:grid-cols-[1.4fr_1fr]">
@@ -132,7 +132,7 @@ export default function CryptDetailPage({ onAuth }) {
         <section className="room-detail-info">
           <div className="flex items-start justify-between gap-4"><div><p className="detail-eyebrow">{room.category || room.type}</p><h1 className="mt-2 font-display text-4xl uppercase leading-none text-ink sm:text-5xl">{room.name}</h1><div className="mt-4 flex items-center gap-2 text-gold"><span className="flex">{[1, 2, 3, 4, 5].map((star) => <Star key={star} size={15} fill={star <= room.rating ? 'currentColor' : 'none'} />)}</span><span className="text-sm text-ink/65">{Number(room.rating || 0).toFixed(1)}</span></div></div><button type="button" aria-label={saved ? 'Remove from saved crypts' : 'Save crypt'} className="save-room-button" onClick={toggleSaved}><Heart size={20} fill={saved ? 'currentColor' : 'none'} /></button></div>
           <p className="mt-5 text-sm font-semibold uppercase tracking-widest text-crimson">{room.sizeSqFt} SQ FT / {room.tagline}</p><p className="mt-5 text-sm leading-7 text-ink/70">{room.description}</p>
-          <div className="detail-facts mt-7">{[[<BedDouble />, `$${room.pricePerNight} / night`], [<Users />, `Up to ${room.capacity} monsters`], [<BedDouble />, room.bedsLabel], [<Maximize2 />, `${room.sizeSqFt} sq ft`]].map(([icon, text]) => <div key={text}>{icon}<span>{text}</span></div>)}</div>
+          <div className="detail-facts mt-7">{[[<BedDouble />, `${formatPHP(room.pricePerNight)} / night`], [<Users />, `Up to ${room.capacity} monsters`], [<BedDouble />, room.bedsLabel], [<Maximize2 />, `${room.sizeSqFt} sq ft`]].map(([icon, text]) => <div key={text}>{icon}<span>{text}</span></div>)}</div>
           <h2 className="mt-8 font-display text-2xl uppercase">Amenities</h2><div className="amenity-grid mt-4">{room.amenities.map((amenity) => <span key={amenity}><Sparkles size={14} />{amenity}</span>)}</div>
         </section>
       </div>
@@ -141,10 +141,10 @@ export default function CryptDetailPage({ onAuth }) {
         <div className="mt-6 grid gap-3 lg:grid-cols-[1.25fr_1.25fr_0.8fr]"><div className="stay-cell"><DateTimePicker variant="booking" id="detail-check-in" label="CHECK-IN · DUSK" value={booking.checkIn} onChange={(value) => setBooking({ ...booking, checkIn: value })} min={new Date().toISOString().slice(0, 10)} /></div><div className="stay-cell"><DateTimePicker variant="booking" id="detail-check-out" label="CHECK-OUT · DAWN" value={booking.checkOut} onChange={(value) => setBooking({ ...booking, checkOut: value })} min={booking.checkIn?.slice(0, 10)} /></div><div className="stay-cell"><span className="booking-label">MONSTERS</span><div className="booking-stepper mt-4" role="group" aria-label="Number of monsters" tabIndex="0" onKeyDown={(event) => { if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') updateGuests(-1); if (event.key === 'ArrowRight' || event.key === 'ArrowUp') updateGuests(1) }}><button type="button" aria-label="Decrease monsters" onClick={() => updateGuests(-1)} disabled={booking.guests <= 1}><span>−</span></button><span aria-live="polite">{booking.guests}</span><button type="button" aria-label="Increase monsters" onClick={() => updateGuests(1)} disabled={booking.guests >= room.capacity}><span>+</span></button></div><p className="mt-2 text-xs text-parchment/55">Fits up to {room.capacity} monsters</p></div></div>
         {booking.guests >= room.capacity && <p className="mt-3 text-xs text-gold" aria-live="polite">This crypt fits up to {room.capacity} monsters.</p>}
         {validation && <p className="booking-error mt-3" aria-live="polite">{validation}</p>}
-        <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_0.8fr]"><div aria-live="polite" className="text-sm">{checking ? <p className="text-gold">Checking the shadows...</p> : availability?.available ? <p className="text-emerald-300">Available for these hours.</p> : availability?.conflicts?.length ? <div className="text-red-300"><p>Not available for those hours.</p>{availability.conflicts.map((conflict) => <p key={conflict._id}>{formatConflict(conflict)}</p>)}</div> : null}<label className="mt-4 block text-xs uppercase tracking-widest text-parchment/60">Special requests (optional)<textarea className="mt-2 min-h-20 w-full border border-parchment/20 bg-[#0f0b14] p-3 text-sm text-parchment outline-none focus:border-gold" value={specialRequests} onChange={(event) => setSpecialRequests(event.target.value)} placeholder="Tell the keepers anything useful." /></label></div><div className="price-summary" aria-live="polite"><p><span>Dusk</span><strong>{booking.checkIn ? formatDateTime(booking.checkIn) : 'Choose a time'}</strong></p><p><span>Dawn</span><strong>{booking.checkOut ? formatDateTime(booking.checkOut) : 'Choose a time'}</strong></p><p><span>Stay</span><strong>{nights ? `${room.pricePerNight} x ${nights} night${nights === 1 ? '' : 's'}` : 'Dates required'}</strong></p><p className="price-total"><span>Total</span><strong>${totalPrice}</strong></p><button type="button" className="booking-submit mt-4 w-full" onClick={reserve} disabled={submitting || Boolean(validation) || checking || availability?.available === false}>{submitting ? 'Reserving...' : user ? 'Reserve' : 'Sign in to reserve'} <ArrowRight size={16} /></button></div></div>
+        <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_0.8fr]"><div aria-live="polite" className="text-sm">{checking ? <p className="text-gold">Checking the shadows...</p> : availability?.available ? <p className="text-emerald-300">Available for these hours.</p> : availability?.conflicts?.length ? <div className="text-red-300"><p>Not available for those hours.</p>{availability.conflicts.map((conflict) => <p key={conflict._id}>{formatConflict(conflict)}</p>)}</div> : null}<label className="mt-4 block text-xs uppercase tracking-widest text-parchment/60">Special requests (optional)<textarea className="mt-2 min-h-20 w-full border border-parchment/20 bg-[#0f0b14] p-3 text-sm text-parchment outline-none focus:border-gold" value={specialRequests} onChange={(event) => setSpecialRequests(event.target.value)} placeholder="Tell the keepers anything useful." /></label></div><div className="price-summary" aria-live="polite"><p><span>Dusk</span><strong>{booking.checkIn ? formatDateTime(booking.checkIn) : 'Choose a time'}</strong></p><p><span>Dawn</span><strong>{booking.checkOut ? formatDateTime(booking.checkOut) : 'Choose a time'}</strong></p><p><span>Stay</span><strong>{nights ? `${formatPHP(room.pricePerNight)} x ${nights} night${nights === 1 ? '' : 's'}` : 'Dates required'}</strong></p><p className="price-total"><span>Total</span><strong>{formatPHP(totalPrice)}</strong></p><button type="button" className="booking-submit mt-4 w-full" onClick={reserve} disabled={submitting || Boolean(validation) || checking || availability?.available === false}>{submitting ? 'Reserving...' : user ? 'Reserve' : 'Sign in to reserve'} <ArrowRight size={16} /></button></div></div>
       </section>
       {error && <Toast error={error} />}<Toast message={message} />
     </div>
     {lightbox && images[activeImage] && <div className="lightbox" role="dialog" aria-modal="true" aria-label={`${room.name} gallery`} onClick={() => setLightbox(false)}><button type="button" aria-label="Close gallery" onClick={() => setLightbox(false)}><X /></button><img src={images[activeImage]} alt={`${room.name} interior`} onClick={(event) => event.stopPropagation()} /></div>}
-  </main></>
+  </main>
 }

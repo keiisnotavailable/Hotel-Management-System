@@ -57,7 +57,6 @@ export default function Navbar({ onAuth }) {
         <NavLink to="/" label="Home" active={location.pathname === '/'} />
         <NavLink to="/about" label="About" active={isActive('/about')} />
         <NavLink to="/crypts" label="Rooms" active={isActive('/crypts')} />
-        <NavLink to="/blog" label="Blog" active={isActive('/blog')} />
         <NavLink to="/contact" label="Contact" active={isActive('/contact')} />
       </div>
       {user ? <div className="navbar-account"><button className="account-button" type="button" onClick={() => setOpen(open === 'account' ? null : 'account')} aria-expanded={open === 'account'} aria-haspopup="menu" aria-controls="navbar-account-menu"><UserCircle size={18} /> {user.name}</button>{open === 'account' && <div id="navbar-account-menu" className="navbar-menu account-menu" role="menu"><Link role="menuitem" to="/profile" onClick={closeMenus}>Profile</Link><Link role="menuitem" to="/my-reservations" onClick={closeMenus}>My Reservations</Link><Link role="menuitem" to="/saved-crypts" onClick={closeMenus}>Saved Crypts</Link><button role="menuitem" type="button" onClick={logout}>Sign Out</button></div>}</div> : <button className="account-button" type="button" onClick={openAuth}>Sign in / Sign up</button>}
@@ -67,7 +66,7 @@ export default function Navbar({ onAuth }) {
       <NavLink to="/" label="Home" active={location.pathname === '/'} onClick={closeMenus} />
       <NavLink to="/about" label="About" active={isActive('/about')} onClick={closeMenus} />
       <NavLink to="/crypts" label="Rooms" active={isActive('/crypts')} onClick={closeMenus} />
-      <NavLink to="/blog" label="Blog" active={isActive('/blog')} onClick={closeMenus} /><NavLink to="/contact" label="Contact" active={isActive('/contact')} onClick={closeMenus} />
+      <NavLink to="/contact" label="Contact" active={isActive('/contact')} onClick={closeMenus} />
       {user ? <><NavLink to="/profile" label="Profile" active={isActive('/profile')} onClick={closeMenus} /><NavLink to="/my-reservations" label="My Reservations" active={isActive('/my-reservations')} onClick={closeMenus} /><NavLink to="/saved-crypts" label="Saved Crypts" active={isActive('/saved-crypts')} onClick={closeMenus} /><button className="account-button mobile-account-button" type="button" onClick={logout}>Sign Out</button></> : <button className="account-button mobile-account-button" type="button" onClick={openAuth}>Sign in / Sign up</button>}
     </div>}
   </nav>

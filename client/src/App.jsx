@@ -14,6 +14,7 @@ import ContactPage from './pages/ContactPage'
 import SavedCryptsPage from './pages/SavedCryptsPage'
 import Layout from './components/Layout'
 import NotFoundPage from './pages/NotFoundPage'
+import AboutPage from './pages/AboutPage'
 
 function Application() {
   const [auth, setAuth] = useState(null)
@@ -25,9 +26,8 @@ function Application() {
       <Route element={<ProtectedRoute />}><Route path="/my-reservations" element={<ReservationsPage />} /><Route path="/profile" element={<ProfilePage />} /></Route>
       <Route element={<ProtectedRoute />}><Route path="/saved-crypts" element={<SavedCryptsPage onAuth={(mode, from) => setAuth({ mode, from })} />} /></Route>
       <Route path="/signin" element={<SignInPage />} />
-      <Route path="/about" element={<StaticPage eyebrow="The Moonstoria story" title="About the castle">Moonstoria is a quiet gothic sanctuary built for memorable nights, thoughtful service, and guests who prefer their holidays after sunset.</StaticPage>} />
+      <Route path="/about" element={<AboutPage />} />
       <Route path="/services" element={<StaticPage eyebrow="At your service" title="Castle services">From moonlit dining to restful crypts, our keepers make every stay comfortable, mysterious, and entirely human-free.</StaticPage>} />
-      <Route path="/blog" element={<StaticPage eyebrow="Tales from the keep" title="The Moonstoria journal">Discover seasonal rituals, room stories, and travel inspiration from the castle grounds.</StaticPage>} />
       <Route path="/contact" element={<ContactPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Route>

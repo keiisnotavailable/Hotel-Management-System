@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Menu, Moon } from 'lucide-react'
+import { Menu } from 'lucide-react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import logo from '../../images/logo.png'
 import Drawer from './Drawer'
 import '../styles/admin.css'
 
@@ -37,11 +38,11 @@ export default function AdminLayout() {
 
   return <div className="admin-shell">
     <aside className="admin-sidebar">
-      <Link to="/admin" className="admin-brand"><Moon size={20} /><span>Moonstoria</span></Link>
+      <Link to="/admin" className="admin-brand"><img src={logo} alt="" /><span>Moonstoria</span></Link>
       <SidebarLinks onSignOut={logout} />
     </aside>
     <Drawer open={drawerOpen} onClose={closeDrawer} label="Admin navigation">
-      <Link to="/admin" className="admin-brand" onClick={() => setDrawerOpen(false)}><Moon size={20} /><span>Moonstoria</span></Link>
+      <Link to="/admin" className="admin-brand" onClick={() => setDrawerOpen(false)}><img src={logo} alt="" /><span>Moonstoria</span></Link>
       <SidebarLinks onNavigate={closeDrawer} onSignOut={() => { closeDrawer(); logout() }} />
     </Drawer>
     <div className="admin-main">

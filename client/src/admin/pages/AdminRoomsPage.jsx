@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowDownUp, Ellipsis, Plus, Search, Star, Wrench } from 'lucide-react'
 import { adminApi, getAdminErrorMessage } from '../lib/adminApi'
 import ConfirmModal from '../components/ConfirmModal'
@@ -79,11 +79,11 @@ function RoomStatusSwitch({ room, busy, onToggle }) {
   </button>
 }
 
-function RoomActions({ room, busy, onStatus, onDelete }) {
+function RoomActions({ room, busy, search, onStatus, onDelete }) {
   return <details className="admin-room-actions-menu">
     <summary aria-label={`Actions for ${room.name}`} aria-disabled={busy}><Ellipsis size={19} /></summary>
     <div className="admin-room-actions-popover">
-      <Link to={`/admin/rooms/${room._id || room.id}/edit`} aria-disabled={busy} onClick={(event) => busy && event.preventDefault()}>Edit</Link>
+      <Link to={`/admin/rooms/${room._id || room.id}/edit${search}`} aria-disabled={busy} onClick={(event) => busy && event.preventDefault()}>Edit</Link>
       <button type="button" disabled={busy} onClick={() => onStatus(room, room.status === 'available' ? 'maintenance' : 'available')}>
         Set to {room.status === 'available' ? 'Maintenance' : 'Available'}
       </button>
@@ -101,6 +101,8 @@ function RoomThumbnail({ room }) {
 
 export default function AdminRoomsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const location = useLocation()
+  const navigate = useNavigate()
   const queryString = searchParams.toString()
   const page = Math.max(1, Number(searchParams.get('page')) || 1)
   const searchParam = searchParams.get('search') || ''
@@ -119,6 +121,12 @@ export default function AdminRoomsPage() {
   const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => setSearchInput(searchParam), [searchParam])
+
+  useEffect(() => {
+    if (!location.state?.roomToast) return
+    setToast({ type: 'success', message: location.state.roomToast })
+    navigate(`${location.pathname}${location.search}`, { replace: true, state: null })
+  }, [location, navigate])
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -235,8 +243,8 @@ export default function AdminRoomsPage() {
     { key: 'status', label: 'Status', render: (room) => <RoomStatusSwitch room={room} busy={Boolean(busyRoomId)} onToggle={requestStatusChange} /> },
     { key: 'featured', label: 'Featured', render: (room) => <FeaturedMark featured={room.featured} /> },
     { key: 'bookingCount', label: 'Bookings', render: (room) => <span className="admin-room-booking-count">{room.bookingCount || 0}<small>{room.upcomingBookingCount || 0} upcoming</small></span> },
-    { key: 'actions', label: 'Actions', render: (room) => <RoomActions room={room} busy={Boolean(busyRoomId)} onStatus={requestStatusChange} onDelete={setDeleteRoom} /> },
-  ], [busyRoomId])
+    { key: 'actions', label: 'Actions', render: (room) => <RoomActions room={room} busy={Boolean(busyRoomId)} search={location.search} onStatus={requestStatusChange} onDelete={setDeleteRoom} /> },
+  ], [busyRoomId, location.search])
 
   return <section className="admin-page admin-rooms-page">
     <div className="admin-rooms-heading">
@@ -245,7 +253,7 @@ export default function AdminRoomsPage() {
         <h1>Crypts</h1>
         <p className="admin-page-subtitle">Search and manage every crypt in the castle.</p>
       </div>
-      <Link className="admin-rooms-add-button" to="/admin/rooms/new"><Plus size={16} /> Add crypt</Link>
+      <Link className="admin-rooms-add-button" to={`/admin/rooms/new${location.search}`}><Plus size={16} /> Add crypt</Link>
     </div>
 
     <div className="admin-rooms-toolbar">
@@ -266,7 +274,7 @@ export default function AdminRoomsPage() {
     {error && <div className={`admin-dashboard-error admin-rooms-error ${!result ? 'is-fatal' : ''}`} role="alert"><span>{error}</span><button type="button" disabled={loading} onClick={reload}>Retry</button></div>}
     {loading && !result ? <RoomSkeleton /> : !result && error ? null : rooms.length === 0
       ? <EmptyState title="No crypts found" description={searchParam || type || status ? 'Try changing your search or filters.' : 'Add the first crypt to begin managing the castle.'}>
-        <Link className="admin-rooms-add-button" to="/admin/rooms/new"><Plus size={16} /> Add crypt</Link>
+        <Link className="admin-rooms-add-button" to={`/admin/rooms/new${location.search}`}><Plus size={16} /> Add crypt</Link>
       </EmptyState>
       : <div className={`admin-rooms-results ${loading ? 'is-loading' : ''}`}>
         <div className="admin-rooms-table-wrap">

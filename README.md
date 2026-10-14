@@ -26,6 +26,9 @@ npm install --prefix server
 
 Create `server/.env` from `server/.env.example`. Never commit the MongoDB
 connection string or JWT secret.
+Set `ADMIN_NAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` in `server/.env` before
+running `npm --prefix server run seed` to create or update the administrator
+account. The seed command also resets the sample rooms and reservations.
 
 Use your Atlas connection string as the value of `MONGO_URI`, adding a database
 name to the path if your copied URL does not already include one:

@@ -30,13 +30,29 @@ function nightsBetween(checkIn, checkOut) {
 }
 
 async function seed() {
+  const adminName = process.env.ADMIN_NAME?.trim()
+  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase()
+  const adminPassword = process.env.ADMIN_PASSWORD
+  if (!adminName || !adminEmail || !adminPassword) {
+    throw new Error('ADMIN_NAME, ADMIN_EMAIL, and ADMIN_PASSWORD must be configured')
+  }
+  if (adminPassword.length < 6) {
+    throw new Error('ADMIN_PASSWORD must be at least 6 characters')
+  }
+
   await connectDatabase()
+  const adminPasswordHash = await bcrypt.hash(adminPassword, 12)
   await Reservation.deleteMany({})
   await Room.deleteMany({})
   await User.updateMany({}, { $set: { savedRooms: [] } })
   const createdRooms = await Room.insertMany(rooms)
   const password = await bcrypt.hash('transylvania-demo-password', 12)
   const user = await User.findOneAndUpdate({ email: 'guest@example.com' }, { $set: { name: 'Jonathan Harker', role: 'guest', password } }, { upsert: true, new: true, setDefaultsOnInsert: true })
+  await User.findOneAndUpdate(
+    { email: adminEmail },
+    { $set: { name: adminName, role: 'admin', isActive: true, password: adminPasswordHash } },
+    { upsert: true, new: true, setDefaultsOnInsert: true },
+  )
   const roomBySlug = new Map(createdRooms.map((room) => [room.slug, room]))
   await Reservation.insertMany(sampleReservations.map((item) => {
     const room = roomBySlug.get(item.slug)
@@ -45,6 +61,7 @@ async function seed() {
   }))
   console.table(createdRooms.map((room) => ({ name: room.name, slug: room.slug, type: room.type, capacity: room.capacity, price: room.pricePerNight, featured: room.featured, images: room.images.join(', ') || 'placeholder' })))
   console.log(`Seeded ${createdRooms.length} rooms and ${sampleReservations.length} reservations in database "${mongoose.connection.name}".`)
+  console.log(`Seeded admin account: ${adminEmail}`)
 }
 
 seed().catch((error) => {

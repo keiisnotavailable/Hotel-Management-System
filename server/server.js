@@ -8,6 +8,7 @@ import roomRoutes from './routes/roomRoutes.js'
 import reservationRoutes from './routes/reservationRoutes.js'
 import profileRoutes from './routes/profileRoutes.js'
 import contactRoutes from './routes/contactRoutes.js'
+import adminRoutes from './routes/admin/adminRoutes.js'
 import Room from './models/Room.js'
 
 const app = express()
@@ -29,6 +30,7 @@ app.use('/api/reservations', reservationRoutes)
 app.use('/api/profile', profileRoutes)
 app.use('/api/users', profileRoutes)
 app.use('/api/contact', contactRoutes)
+app.use('/api/admin', adminRoutes)
 
 app.use((error, _req, res, _next) => {
   console.error(error)

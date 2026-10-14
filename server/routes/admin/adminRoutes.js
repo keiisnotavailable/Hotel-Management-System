@@ -3,6 +3,7 @@ import { getAdminStats } from '../../controllers/admin/statsController.js'
 import { adminOnly } from '../../middleware/admin/adminOnly.js'
 import { requireAuth } from '../../middleware/auth.js'
 import adminRoomRoutes from './adminRoomRoutes.js'
+import adminUserRoutes from './adminUserRoutes.js'
 
 const router = Router()
 
@@ -16,5 +17,6 @@ router.get('/stats', async (req, res, next) => {
   }
 })
 router.use(adminRoomRoutes)
+router.use('/users', adminUserRoutes)
 
 export default router

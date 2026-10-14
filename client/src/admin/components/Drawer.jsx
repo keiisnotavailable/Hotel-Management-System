@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 
-export default function Drawer({ open, onClose, label = 'Navigation', children }) {
+export default function Drawer({ open, onClose, label = 'Navigation', panelClassName = '', children }) {
   const panelRef = useRef(null)
 
   useEffect(() => {
@@ -41,7 +41,7 @@ export default function Drawer({ open, onClose, label = 'Navigation', children }
 
   if (!open) return null
   return <div className="admin-drawer-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-    <aside ref={panelRef} className="admin-drawer-panel" role="dialog" aria-modal="true" aria-label={label} tabIndex="-1">
+    <aside ref={panelRef} className={`admin-drawer-panel ${panelClassName}`} role="dialog" aria-modal="true" aria-label={label} tabIndex="-1">
       <button type="button" className="admin-drawer-close" onClick={onClose} aria-label="Close navigation"><X size={20} /></button>
       {children}
     </aside>

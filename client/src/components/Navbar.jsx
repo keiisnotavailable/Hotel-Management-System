@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import logo from '../images/logo.png'
+import { getUploadedAssetUrl } from '../lib/api'
 
 function NavLink({ to, label, active, onClick }) {
   return <Link to={to} onClick={onClick} className={`navbar-link ${active ? 'active' : ''}`}>{label}</Link>
@@ -15,12 +16,8 @@ export default function Navbar({ onAuth }) {
   const [open, setOpen] = useState(null)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [profilePhoto, setProfilePhoto] = useState(() => localStorage.getItem('moonstoriaProfilePhoto') || '')
 
   useEffect(() => {
-    function updateProfilePhoto() {
-      setProfilePhoto(localStorage.getItem('moonstoriaProfilePhoto') || '')
-    }
     function updateScrolled() {
       setScrolled(window.scrollY > 20)
     }
@@ -30,11 +27,9 @@ export default function Navbar({ onAuth }) {
     updateScrolled()
     window.addEventListener('scroll', updateScrolled, { passive: true })
     document.addEventListener('keydown', closeOnEscape)
-    window.addEventListener('moonstoria-profile-photo', updateProfilePhoto)
     return () => {
       window.removeEventListener('scroll', updateScrolled)
       document.removeEventListener('keydown', closeOnEscape)
-      window.removeEventListener('moonstoria-profile-photo', updateProfilePhoto)
     }
   }, [])
 
@@ -55,6 +50,7 @@ export default function Navbar({ onAuth }) {
   }
 
   const isActive = (prefix) => location.pathname === prefix || location.pathname.startsWith(`${prefix}/`)
+  const profilePhoto = getUploadedAssetUrl(user?.profileImage)
 
   return <nav className={`navbar ${scrolled ? 'navbar-scrolled' : ''}`} aria-label="Main navigation">
     <div className="navbar-inner">

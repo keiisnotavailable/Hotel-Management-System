@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { Link, useNavigate } from 'react-router-dom'
 import { CalendarDays, Eye, EyeOff, Heart, LogOut, Settings, Shield, Star, UserCircle, X } from 'lucide-react'
-import { API_BASE, authConfig, getErrorMessage } from '../lib/api'
+import { API_BASE, authConfig, getErrorMessage, getUploadedAssetUrl } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { getRoomImage } from '../utils/roomImages'
 import { formatPHP } from '../lib/currency'
@@ -50,7 +50,8 @@ export default function ProfilePage() {
   const [passwordError, setPasswordError] = useState('')
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
-  const [profilePhoto, setProfilePhoto] = useState(() => localStorage.getItem('moonstoriaProfilePhoto') || '')
+  const [profilePhoto, setProfilePhoto] = useState(() => getUploadedAssetUrl(user.profileImage || ''))
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [preferences, setPreferences] = useState(() => {
     const stored = localStorage.getItem('moonstoriaPreferences')
     return stored ? JSON.parse(stored) : { roomType: 'Any room', darkness: 'Total darkness', dietary: '', bookingUpdates: true, newsletter: false }
@@ -133,21 +134,31 @@ export default function ProfilePage() {
   function uploadPhoto(event) {
     const file = event.target.files?.[0]
     if (!file) return
-    if (!file.type.startsWith('image/')) {
-      setError('Please choose an image file.')
+    const input = event.currentTarget
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      setError('Choose a JPG, PNG, or WebP image no larger than 5 MB.')
+      input.value = ''
       return
     }
-    const reader = new FileReader()
-    reader.onload = () => {
-      const photo = String(reader.result)
-      localStorage.setItem('moonstoriaProfilePhoto', photo)
-      window.dispatchEvent(new Event('moonstoria-profile-photo'))
-      setProfilePhoto(photo)
-      setMessage('Profile photo updated.')
+    async function savePhoto() {
+      setUploadingPhoto(true)
       setError('')
+      setMessage('')
+      const body = new FormData()
+      body.append('image', file)
+      try {
+        const { data } = await axios.post(`${API_BASE}/users/profile/photo`, body, authConfig())
+        setProfilePhoto(getUploadedAssetUrl(data.user.profileImage || ''))
+        signIn(data.user, localStorage.getItem('hotelTransylvaniaToken'))
+        setMessage('Profile photo updated.')
+      } catch (requestError) {
+        setError(getErrorMessage(requestError, 'Profile photo could not be updated.'))
+      } finally {
+        setUploadingPhoto(false)
+        input.value = ''
+      }
     }
-    reader.readAsDataURL(file)
-    event.target.value = ''
+    savePhoto()
   }
 
   function updatePreference(field, value) {

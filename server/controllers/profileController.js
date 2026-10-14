@@ -9,6 +9,13 @@ function publicUser(user) {
 
 export function getProfile(req, res) { return res.json({ user: publicUser(req.user) }) }
 
+export async function uploadProfilePhoto(req, res) {
+  if (!req.file) return res.status(400).json({ message: 'An image file is required in the "image" field.' })
+  req.user.profileImage = `/uploads/${req.file.filename}`
+  await req.user.save()
+  return res.status(201).json({ user: publicUser(req.user) })
+}
+
 export async function updateProfile(req, res) {
   const allowed = ['name', 'email', 'phone', 'address', 'profileImage']
   for (const key of allowed) {

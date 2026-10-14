@@ -1,12 +1,14 @@
 import { Router } from 'express'
 import { requireAuth } from '../middleware/auth.js'
-import { getProfile, updateProfile, changePassword, getSavedRooms, toggleSavedRoom } from '../controllers/profileController.js'
+import { getProfile, updateProfile, uploadProfilePhoto, changePassword, getSavedRooms, toggleSavedRoom } from '../controllers/profileController.js'
+import { handleRoomUploadError, uploadRoomImage } from '../middleware/admin/roomUpload.js'
 
 const router = Router()
 const asyncHandler = (handler) => (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next)
 router.use(requireAuth)
 router.get('/saved', asyncHandler(getSavedRooms))
 router.post('/saved/:roomId', asyncHandler(toggleSavedRoom))
+router.post('/profile/photo', uploadRoomImage.single('image'), handleRoomUploadError, asyncHandler(uploadProfilePhoto))
 router.get('/', getProfile)
 router.patch('/', asyncHandler(updateProfile))
 router.patch('/password', asyncHandler(changePassword))

@@ -120,7 +120,7 @@ function RecentReservationTable({ reservations }) {
     { key: 'status', label: 'Status', render: (item) => <span className={`admin-status-badge admin-status-${item.status}`}>{item.status}</span> },
   ], [])
 
-  return <DataTable columns={columns} items={reservations} emptyTitle="No recent reservations" emptyDescription="When a monster books a crypt, it will appear here." />
+  return <DataTable columns={columns} items={reservations} pageSize={3} emptyTitle="No recent reservations" emptyDescription="When a monster books a crypt, it will appear here." />
 }
 
 export default function AdminDashboard() {

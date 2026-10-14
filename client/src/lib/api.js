@@ -2,6 +2,13 @@ import axios from 'axios'
 
 export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
+export function getUploadedAssetUrl(path) {
+  if (!path) return ''
+  return path.startsWith('/uploads/')
+    ? new URL(path, new URL(API_BASE, window.location.origin)).toString()
+    : path
+}
+
 export function authConfig() {
   const token = localStorage.getItem('hotelTransylvaniaToken')
   return token ? { headers: { Authorization: `Bearer ${token}` } } : {}

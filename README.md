@@ -54,6 +54,15 @@ npm run client
 
 The API health check is available at `http://localhost:5000/api/health`.
 
+## Admin room API
+
+Admin room endpoints require `Authorization: Bearer <admin-token>`. Rooms can
+be listed and managed at `/api/admin/rooms`; paginated lists use `items`, `page`,
+`limit`, `total`, and `totalPages`. Use `/api/admin/image-keys` to retrieve
+available room-image keys. Upload JPG, PNG, or WebP files up to 5 MB to
+`POST /api/admin/uploads` as multipart field `image`, then add its returned
+`image` path to the room's `images` array.
+
 ## Authentication
 
 The homepage modal now calls:

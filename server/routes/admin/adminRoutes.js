@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { getAdminStats } from '../../controllers/admin/statsController.js'
 import { adminOnly } from '../../middleware/admin/adminOnly.js'
 import { requireAuth } from '../../middleware/auth.js'
+import adminRoomRoutes from './adminRoomRoutes.js'
 
 const router = Router()
 
@@ -14,5 +15,6 @@ router.get('/stats', async (req, res, next) => {
     return next(error)
   }
 })
+router.use(adminRoomRoutes)
 
 export default router

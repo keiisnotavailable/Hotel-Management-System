@@ -2,6 +2,7 @@ import 'dotenv/config'
 import cors from 'cors'
 import express from 'express'
 import mongoose from 'mongoose'
+import { fileURLToPath } from 'node:url'
 import { connectDatabase } from './config/db.js'
 import authRoutes from './routes/authRoutes.js'
 import roomRoutes from './routes/roomRoutes.js'
@@ -20,6 +21,7 @@ if (!process.env.JWT_SECRET) {
 
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }))
 app.use(express.json({ limit: '10kb' }))
+app.use('/uploads', express.static(fileURLToPath(new URL('./uploads/', import.meta.url))))
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', service: 'hotel-transylvania-server' })

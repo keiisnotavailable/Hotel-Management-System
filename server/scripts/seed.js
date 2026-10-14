@@ -57,7 +57,7 @@ async function seed() {
   await Reservation.insertMany(sampleReservations.map((item) => {
     const room = roomBySlug.get(item.slug)
     const nights = nightsBetween(item.checkIn, item.checkOut)
-    return { user: user._id, room: room._id, checkIn: new Date(item.checkIn), checkOut: new Date(item.checkOut), nights, totalPrice: nights * room.pricePerNight, guests: item.guests, status: item.status, specialRequests: item.specialRequests }
+    return { user: user._id, room: room._id, roomName: room.name, roomSlug: room.slug, userName: user.name, userEmail: user.email, checkIn: new Date(item.checkIn), checkOut: new Date(item.checkOut), nights, totalPrice: nights * room.pricePerNight, guests: item.guests, status: item.status, specialRequests: item.specialRequests }
   }))
   console.table(createdRooms.map((room) => ({ name: room.name, slug: room.slug, type: room.type, capacity: room.capacity, price: room.pricePerNight, featured: room.featured, images: room.images.join(', ') || 'placeholder' })))
   console.log(`Seeded ${createdRooms.length} rooms and ${sampleReservations.length} reservations in database "${mongoose.connection.name}".`)

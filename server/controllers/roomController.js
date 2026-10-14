@@ -1,22 +1,7 @@
 import Room from '../models/Room.js'
-import Reservation from '../models/Reservation.js'
 import mongoose from 'mongoose'
-import { CLEANING_BUFFER_MINUTES } from '../config/defaults.js'
-import { DEFAULT_CHECKIN_TIME, DEFAULT_CHECKOUT_TIME, MIN_STAY_HOURS } from '../config/defaults.js'
+import { checkAvailability, validateReservationInput } from '../services/reservationService.js'
 
-function normalizeDate(value, time) {
-  if (typeof value !== 'string') return null
-  const raw = /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T${time}:00.000Z` : value
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(raw)) return null
-  const date = new Date(raw)
-  return Number.isNaN(date.getTime()) ? null : date
-}
-
-const activeReservations = (checkIn, checkOut) => ({
-  status: 'confirmed',
-  checkIn: { $lt: checkOut },
-  checkOut: { $gt: checkIn },
-})
 const ROOM_TYPES = ['Crypt', 'Den', 'Suite', 'Tower']
 function roomSelector(value) {
   return mongoose.isValidObjectId(value) ? { $or: [{ _id: value }, { slug: value }] } : { slug: value }
@@ -78,33 +63,33 @@ export async function roomAvailability(req, res) {
   const { checkIn, checkOut, guests = 1 } = req.query
   const room = await Room.findOne(roomSelector(req.params.id))
   if (!room) return res.status(404).json({ message: 'Room not found.' })
-  if (room.status !== 'available') return res.json({ available: false, maintenance: true, conflicts: [], room: publicRoom(room) })
-  const start = normalizeDate(checkIn, DEFAULT_CHECKIN_TIME)
-  const end = normalizeDate(checkOut, DEFAULT_CHECKOUT_TIME)
-  if (start && end && end <= start && /^\d{4}-\d{2}-\d{2}$/.test(checkOut || '')) end.setUTCDate(end.getUTCDate() + 1)
-  const guestCount = Number(guests)
-  if (!start || !end || start >= end || end - start < MIN_STAY_HOURS * 3600000 || start <= new Date() || !Number.isInteger(guestCount) || guestCount < 1 || guestCount > room.capacity) {
-    return res.status(400).json({ message: 'Valid checkIn and checkOut dates are required.' })
-  }
-  const bufferedStart = new Date(start.getTime() - CLEANING_BUFFER_MINUTES * 60000)
-  const bufferedEnd = new Date(end.getTime() + CLEANING_BUFFER_MINUTES * 60000)
-  const conflicts = await Reservation.find({ room: room._id, ...activeReservations(bufferedStart, bufferedEnd) }).select('_id checkIn checkOut status').lean()
-  return res.json({ available: conflicts.length === 0, conflicts, room: publicRoom(room) })
+  const validation = validateReservationInput({
+    room,
+    checkIn,
+    checkOut,
+    guests,
+    guestErrorMessage: 'Valid checkIn and checkOut dates are required.',
+    maintenanceFirst: true,
+  })
+  if (validation.error?.status === 409) return res.json({ available: false, maintenance: true, conflicts: [], room: publicRoom(room) })
+  if (validation.error) return res.status(validation.error.status).json({ message: validation.error.message })
+  const { checkIn: start, checkOut: end } = validation.value
+  const availability = await checkAvailability({ roomId: room._id, checkIn: start, checkOut: end })
+  return res.json({ ...availability, room: publicRoom(room) })
 }
 
 export async function availableRooms(req, res) {
   const { checkIn, checkOut, guests = 1, type } = req.query
-  const start = normalizeDate(checkIn, DEFAULT_CHECKIN_TIME)
-  const end = normalizeDate(checkOut, DEFAULT_CHECKOUT_TIME)
-  if (start && end && end <= start && /^\d{4}-\d{2}-\d{2}$/.test(checkOut || '')) end.setUTCDate(end.getUTCDate() + 1)
-  const guestCount = Number(guests)
-  if (!start || !end || start >= end || end - start < MIN_STAY_HOURS * 3600000 || start <= new Date() || !Number.isInteger(guestCount) || guestCount < 1) {
-    return res.status(400).json({ message: 'Valid checkIn and checkOut dates are required.' })
-  }
-  const bufferedStart = new Date(start.getTime() - CLEANING_BUFFER_MINUTES * 60000)
-  const bufferedEnd = new Date(end.getTime() + CLEANING_BUFFER_MINUTES * 60000)
-  const conflicts = await Reservation.find({ ...activeReservations(bufferedStart, bufferedEnd) }).distinct('room')
-  const filter = { status: 'available', capacity: { $gte: guestCount }, _id: { $nin: conflicts } }
+  const validation = validateReservationInput({
+    checkIn,
+    checkOut,
+    guests,
+    guestErrorMessage: 'Valid checkIn and checkOut dates are required.',
+  })
+  if (validation.error) return res.status(validation.error.status).json({ message: validation.error.message })
+  const { checkIn: start, checkOut: end, guests: guestCount } = validation.value
+  const availability = await checkAvailability({ checkIn: start, checkOut: end })
+  const filter = { status: 'available', capacity: { $gte: guestCount }, _id: { $nin: availability.roomIds } }
   if (type) {
     if (!ROOM_TYPES.includes(type)) return res.status(400).json({ message: 'Invalid room type.' })
     filter.type = type

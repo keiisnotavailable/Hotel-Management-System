@@ -8,6 +8,7 @@
     "server": "npm --prefix server run dev",
     "build": "npm --prefix client run build",
     "migrate:roles": "npm --prefix server run migrate:roles",
-    "migrate:rooms": "npm --prefix server run migrate:rooms"
+    "migrate:rooms": "npm --prefix server run migrate:rooms",
+    "migrate:reservations": "npm --prefix server run migrate:reservations"
   }
 }

@@ -77,3 +77,9 @@ Convert existing room `isActive` values to the room `status` field with:
 ```bash
 npm run migrate:rooms
 ```
+
+Backfill reservation room and guest snapshots on an existing database with:
+
+```bash
+npm run migrate:reservations
+```

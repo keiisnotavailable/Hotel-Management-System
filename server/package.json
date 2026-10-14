@@ -8,7 +8,8 @@
     "start": "node server.js",
     "seed": "node scripts/seed.js",
     "migrate:roles": "node scripts/migrateRoles.js",
-    "migrate:rooms": "node scripts/migrateRooms.js"
+    "migrate:rooms": "node scripts/migrateRooms.js",
+    "migrate:reservations": "node scripts/migrateReservations.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

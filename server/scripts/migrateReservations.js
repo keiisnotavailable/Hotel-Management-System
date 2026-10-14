@@ -1,0 +1,48 @@
+import 'dotenv/config'
+import mongoose from 'mongoose'
+import { connectDatabase } from '../config/db.js'
+import Reservation from '../models/Reservation.js'
+
+async function migrateReservations() {
+  await connectDatabase()
+
+  let lastId
+  let migratedCount = 0
+  while (true) {
+    const filter = lastId ? { _id: { $gt: lastId } } : {}
+    const reservations = await Reservation.find(filter)
+      .sort({ _id: 1 })
+      .limit(500)
+      .populate('room', 'name slug')
+      .populate('user', 'name email')
+      .lean()
+    if (!reservations.length) break
+
+    await Reservation.bulkWrite(reservations.map((reservation) => ({
+      updateOne: {
+        filter: { _id: reservation._id },
+        update: {
+          $set: {
+            roomName: reservation.roomName || reservation.room?.name || 'Unknown room',
+            roomSlug: reservation.roomSlug || reservation.room?.slug || '',
+            userName: reservation.userName || reservation.user?.name || 'Unknown guest',
+            userEmail: reservation.userEmail || reservation.user?.email || '',
+          },
+        },
+      },
+    })))
+    lastId = reservations[reservations.length - 1]._id
+    migratedCount += reservations.length
+  }
+
+  console.log(`Backfilled snapshots for ${migratedCount} reservations.`)
+}
+
+migrateReservations()
+  .catch((error) => {
+    console.error(`Reservation migration failed: ${error.message}`)
+    process.exitCode = 1
+  })
+  .finally(async () => {
+    await mongoose.disconnect()
+  })

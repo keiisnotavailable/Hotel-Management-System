@@ -21,8 +21,9 @@ export async function createReservation(req, res) {
   const durationHours = (end - start) / 3600000
   if (start <= new Date()) return res.status(400).json({ message: 'Check-in must be in the future.' })
   if (durationHours < MIN_STAY_HOURS) return res.status(400).json({ message: `A stay must be at least ${MIN_STAY_HOURS} hours.` })
-  const roomDoc = await Room.findOne({ _id: room, isActive: true })
+  const roomDoc = await Room.findById(room)
   if (!roomDoc) return res.status(404).json({ message: 'Room not found.' })
+  if (roomDoc.status !== 'available') return res.status(409).json({ message: 'This crypt is closed for repairs.' })
   const guestCount = Number(guests)
   if (!Number.isInteger(guestCount) || guestCount < 1 || guestCount > roomDoc.capacity) return res.status(400).json({ message: 'Guest count exceeds room capacity.' })
   const bufferedStart = new Date(start.getTime() - CLEANING_BUFFER_MINUTES * 60000)

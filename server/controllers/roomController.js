@@ -28,7 +28,7 @@ function publicRoom(room) {
 
 export async function listRooms(req, res) {
   const { type, capacity, minCapacity, maxPrice, minPrice, amenities, search, sort, featured, page = 1, limit = 12 } = req.query
-  const filter = { isActive: true }
+  const filter = { status: 'available' }
   if (featured === 'true') filter.featured = true
   if (featured === 'false') filter.featured = false
   if (type) {
@@ -51,16 +51,16 @@ export async function listRooms(req, res) {
   const [rooms, total, types] = await Promise.all([
     Room.find(filter).sort(sortOption).skip((currentPage - 1) * pageSize).limit(pageSize),
     Room.countDocuments(filter),
-    Room.distinct('type', { isActive: true }),
+    Room.distinct('type', { status: 'available' }),
   ])
   return res.json({ rooms: rooms.map(publicRoom), types, pagination: { page: currentPage, limit: pageSize, total, pages: Math.ceil(total / pageSize) } })
 }
 
 export async function roomStats(_req, res) {
   const [totalRooms, ratingResult] = await Promise.all([
-    Room.countDocuments({ isActive: true }),
+    Room.countDocuments({ status: 'available' }),
     Room.aggregate([
-      { $match: { isActive: true } },
+      { $match: { status: 'available' } },
       { $group: { _id: null, averageRating: { $avg: '$rating' } } },
     ]),
   ])
@@ -69,15 +69,16 @@ export async function roomStats(_req, res) {
 }
 
 export async function getRoom(req, res) {
-  const room = await Room.findOne({ ...roomSelector(req.params.id), isActive: true })
+  const room = await Room.findOne(roomSelector(req.params.id))
   if (!room) return res.status(404).json({ message: 'Room not found.' })
   return res.json({ room: publicRoom(room) })
 }
 
 export async function roomAvailability(req, res) {
   const { checkIn, checkOut, guests = 1 } = req.query
-  const room = await Room.findOne({ ...roomSelector(req.params.id), isActive: true })
+  const room = await Room.findOne(roomSelector(req.params.id))
   if (!room) return res.status(404).json({ message: 'Room not found.' })
+  if (room.status !== 'available') return res.json({ available: false, maintenance: true, conflicts: [], room: publicRoom(room) })
   const start = normalizeDate(checkIn, DEFAULT_CHECKIN_TIME)
   const end = normalizeDate(checkOut, DEFAULT_CHECKOUT_TIME)
   if (start && end && end <= start && /^\d{4}-\d{2}-\d{2}$/.test(checkOut || '')) end.setUTCDate(end.getUTCDate() + 1)
@@ -103,7 +104,7 @@ export async function availableRooms(req, res) {
   const bufferedStart = new Date(start.getTime() - CLEANING_BUFFER_MINUTES * 60000)
   const bufferedEnd = new Date(end.getTime() + CLEANING_BUFFER_MINUTES * 60000)
   const conflicts = await Reservation.find({ ...activeReservations(bufferedStart, bufferedEnd) }).distinct('room')
-  const filter = { isActive: true, capacity: { $gte: guestCount }, _id: { $nin: conflicts } }
+  const filter = { status: 'available', capacity: { $gte: guestCount }, _id: { $nin: conflicts } }
   if (type) {
     if (!ROOM_TYPES.includes(type)) return res.status(400).json({ message: 'Invalid room type.' })
     filter.type = type

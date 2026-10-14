@@ -29,13 +29,13 @@ export async function changePassword(req, res) {
 }
 
 export async function getSavedRooms(req, res) {
-  const user = await User.findById(req.user._id).populate({ path: 'savedRooms', match: { isActive: true }, select: '-__v' })
+  const user = await User.findById(req.user._id).populate({ path: 'savedRooms', match: { status: 'available' }, select: '-__v' })
   return res.json({ rooms: user.savedRooms || [], savedRooms: user.savedRooms || [] })
 }
 
 export async function toggleSavedRoom(req, res) {
   if (!mongoose.isValidObjectId(req.params.roomId)) return res.status(400).json({ message: 'A supplied room identifier is invalid.' })
-  const room = await Room.findOne({ _id: req.params.roomId, isActive: true })
+  const room = await Room.findOne({ _id: req.params.roomId, status: 'available' })
   if (!room) return res.status(404).json({ message: 'Room not found.' })
   const user = await User.findById(req.user._id)
   const index = user.savedRooms.findIndex((id) => id.equals(room._id))

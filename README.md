@@ -71,3 +71,9 @@ run the migration from the project root:
 ```bash
 npm run migrate:roles
 ```
+
+Convert existing room `isActive` values to the room `status` field with:
+
+```bash
+npm run migrate:rooms
+```

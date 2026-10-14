@@ -17,7 +17,7 @@ const rooms = [
   { slug: 'blob-lagoon-suite', name: 'Blob Lagoon Suite', description: 'A playful suite with cool lagoon tones, rounded furnishings, and a private sitting area for slow, dreamy evenings.', category: 'Suite', tagline: 'Softly surreal', sizeSqFt: 650, bedsLabel: '1 King Bed', rating: 4.4, featured: false, type: 'Suite', capacity: 3, pricePerNight: 18560, amenities: ['Lagoon view', 'Rain shower', 'Sitting room'], images: ['blob-lagoon-suite'], floor: 2 },
   { slug: 'skeleton-tower', name: 'Skeleton Tower', description: 'A high tower room with dramatic arches, moonlit views, and a quiet reading corner above the castle mist.', category: 'Tower', tagline: 'Bones above the clouds', sizeSqFt: 560, bedsLabel: '2 Twin Coffins', rating: 4.3, featured: false, type: 'Tower', capacity: 3, pricePerNight: 16820, amenities: ['Tower view', 'Reading nook', 'Stained glass'], images: ['skeleton-tower'], floor: 7 },
   { slug: 'witchs-attic', name: "Witch's Attic", description: 'A charming attic retreat filled with warm wood, spell-safe storage, and a small window overlooking the enchanted grounds.', category: 'Attic Room', tagline: 'A little magic upstairs', sizeSqFt: 360, bedsLabel: '1 Double Bed', rating: 4.1, featured: false, type: 'Crypt', capacity: 2, pricePerNight: 11310, amenities: ['Potion-safe storage', 'Hearth', 'Garden view'], images: ['witch-attic'], floor: 5 },
-]
+].map((room) => ({ ...room, status: 'available' }))
 
 const sampleReservations = [
   { slug: 'werewolf-pups-family-den', checkIn: '2027-01-18T18:00:00.000Z', checkOut: '2027-01-21T06:00:00.000Z', guests: 2, status: 'confirmed', specialRequests: 'Late-night complimentary cocoa.' },

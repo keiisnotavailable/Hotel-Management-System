@@ -48,8 +48,8 @@ app.use((error, _req, res, _next) => {
 
 connectDatabase()
   .then(() => {
-    Room.countDocuments({ isActive: true }).then((roomCount) => {
-      console.log(`Database "${mongoose.connection.name}" has ${roomCount} active rooms`)
+    Room.countDocuments({ status: 'available' }).then((roomCount) => {
+      console.log(`Database "${mongoose.connection.name}" has ${roomCount} available rooms`)
       app.listen(port, () => console.log(`Server listening on http://localhost:${port}`))
     })
   })

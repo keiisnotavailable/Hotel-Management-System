@@ -16,7 +16,9 @@ const roomSchema = new mongoose.Schema({
   amenities: { type: [String], default: [] },
   images: { type: [String], default: [] },
   floor: { type: Number, min: 0 },
-  isActive: { type: Boolean, default: true },
+  status: { type: String, enum: ['available', 'maintenance'], default: 'available' },
+  maintenanceNote: { type: String, trim: true },
+  statusUpdatedAt: { type: Date },
 }, { timestamps: true })
 
 export default mongoose.model('Room', roomSchema)

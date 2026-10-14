@@ -8,6 +8,7 @@ export async function requireAuth(req, res, next) {
     const payload = jwt.verify(header.slice(7), process.env.JWT_SECRET)
     const user = await User.findById(payload.sub)
     if (!user) return res.status(401).json({ message: 'Authentication is required.' })
+    if (user.isActive === false) return res.status(403).json({ message: 'Account disabled' })
     req.user = user
     return next()
   } catch {

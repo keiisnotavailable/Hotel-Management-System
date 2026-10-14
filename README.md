@@ -61,3 +61,10 @@ The homepage modal now calls:
 Successful authentication stores the returned JWT and public user profile in
 the browser. Passwords are hashed with `bcryptjs` and are never returned by the
 API.
+
+After updating an existing database to the roles and account-status fields,
+run the migration from the project root:
+
+```bash
+npm run migrate:roles
+```

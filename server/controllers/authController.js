@@ -58,6 +58,9 @@ export async function login(req, res) {
   if (!user || !(await bcrypt.compare(password, user.password))) {
     return res.status(401).json({ message: 'The secret spell does not match.' })
   }
+  if (user.isActive === false) {
+    return res.status(403).json({ message: 'Account disabled' })
+  }
 
   return res.json({ user: publicUser(user), token: createToken(user) })
 }

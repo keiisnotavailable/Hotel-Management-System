@@ -9,7 +9,7 @@ function NavLink({ to, label, active, onClick }) {
 }
 
 export default function Navbar({ onAuth }) {
-  const { user, signOut } = useAuth()
+  const { user, isAdmin, signOut } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const [open, setOpen] = useState(null)
@@ -65,7 +65,7 @@ export default function Navbar({ onAuth }) {
         <NavLink to="/crypts" label="Rooms" active={isActive('/crypts')} />
         <NavLink to="/contact" label="Contact" active={isActive('/contact')} />
       </div>
-      {user ? <div className="navbar-account"><button className="account-button" type="button" onClick={() => setOpen(open === 'account' ? null : 'account')} aria-expanded={open === 'account'} aria-haspopup="menu" aria-controls="navbar-account-menu">{profilePhoto ? <img src={profilePhoto} alt="" className="navbar-profile-photo" /> : <UserCircle size={18} />} <span>{user.name}</span></button>{open === 'account' && <div id="navbar-account-menu" className="navbar-menu account-menu" role="menu"><Link role="menuitem" to="/profile" onClick={closeMenus}>Profile</Link><Link role="menuitem" to="/my-reservations" onClick={closeMenus}>My Reservations</Link><Link role="menuitem" to="/saved-crypts" onClick={closeMenus}>Saved Crypts</Link><button role="menuitem" type="button" onClick={logout}>Sign Out</button></div>}</div> : <button className="account-button" type="button" onClick={openAuth}>Sign in / Sign up</button>}
+      {user ? <div className="navbar-account"><button className="account-button" type="button" onClick={() => setOpen(open === 'account' ? null : 'account')} aria-expanded={open === 'account'} aria-haspopup="menu" aria-controls="navbar-account-menu">{profilePhoto ? <img src={profilePhoto} alt="" className="navbar-profile-photo" /> : <UserCircle size={18} />} <span>{user.name}</span></button>{open === 'account' && <div id="navbar-account-menu" className="navbar-menu account-menu" role="menu"><Link role="menuitem" to="/profile" onClick={closeMenus}>Profile</Link><Link role="menuitem" to="/my-reservations" onClick={closeMenus}>My Reservations</Link><Link role="menuitem" to="/saved-crypts" onClick={closeMenus}>Saved Crypts</Link>{isAdmin && <Link role="menuitem" to="/admin" onClick={closeMenus}>Admin</Link>}<button role="menuitem" type="button" onClick={logout}>Sign Out</button></div>}</div> : <button className="account-button" type="button" onClick={openAuth}>Sign in / Sign up</button>}
       <button className="navbar-toggle" type="button" onClick={() => setMobileOpen(!mobileOpen)} aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={mobileOpen} aria-controls="navbar-mobile-panel">{mobileOpen ? <X size={20} /> : <Menu size={20} />}</button>
     </div>
     {mobileOpen && <div id="navbar-mobile-panel" className="navbar-mobile-panel">
@@ -73,7 +73,7 @@ export default function Navbar({ onAuth }) {
       <NavLink to="/about" label="About" active={isActive('/about')} onClick={closeMenus} />
       <NavLink to="/crypts" label="Rooms" active={isActive('/crypts')} onClick={closeMenus} />
       <NavLink to="/contact" label="Contact" active={isActive('/contact')} onClick={closeMenus} />
-      {user ? <><NavLink to="/profile" label="Profile" active={isActive('/profile')} onClick={closeMenus} /><NavLink to="/my-reservations" label="My Reservations" active={isActive('/my-reservations')} onClick={closeMenus} /><NavLink to="/saved-crypts" label="Saved Crypts" active={isActive('/saved-crypts')} onClick={closeMenus} /><button className="account-button mobile-account-button" type="button" onClick={logout}>Sign Out</button></> : <button className="account-button mobile-account-button" type="button" onClick={openAuth}>Sign in / Sign up</button>}
+      {user ? <><NavLink to="/profile" label="Profile" active={isActive('/profile')} onClick={closeMenus} /><NavLink to="/my-reservations" label="My Reservations" active={isActive('/my-reservations')} onClick={closeMenus} /><NavLink to="/saved-crypts" label="Saved Crypts" active={isActive('/saved-crypts')} onClick={closeMenus} />{isAdmin && <NavLink to="/admin" label="Admin" active={isActive('/admin')} onClick={closeMenus} />}<button className="account-button mobile-account-button" type="button" onClick={logout}>Sign Out</button></> : <button className="account-button mobile-account-button" type="button" onClick={openAuth}>Sign in / Sign up</button>}
     </div>}
   </nav>
 }

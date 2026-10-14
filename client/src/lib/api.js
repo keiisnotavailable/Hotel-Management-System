@@ -8,5 +8,9 @@ export function authConfig() {
 }
 
 export function getErrorMessage(error, fallback) {
-  return error.response?.data?.message || fallback
+  if (error.response?.data?.message) return error.response.data.message
+  if (error.code === 'ERR_NETWORK' || (error.request && !error.response)) {
+    return 'Unable to reach the server. Make sure the backend is running, then try again.'
+  }
+  return fallback
 }

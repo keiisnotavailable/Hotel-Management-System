@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
 const AuthContext = createContext(null)
 
@@ -19,6 +19,16 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('hotelTransylvaniaUser')
     setUser(null)
   }
+
+  useEffect(() => {
+    function handleExpiredAuth() {
+      localStorage.removeItem('hotelTransylvaniaToken')
+      localStorage.removeItem('hotelTransylvaniaUser')
+      setUser(null)
+    }
+    window.addEventListener('moonstoria:auth-expired', handleExpiredAuth)
+    return () => window.removeEventListener('moonstoria:auth-expired', handleExpiredAuth)
+  }, [])
 
   const value = useMemo(() => ({ user, isAdmin: user?.role === 'admin', signIn, signOut }), [user])
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

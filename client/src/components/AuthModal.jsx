@@ -42,8 +42,13 @@ export default function AuthModal({ initialMode = 'signin', from, onClose }) {
       } else {
         signIn(data.user, data.token)
         onClose()
-        const destination = from || location.state?.from?.pathname || '/'
-        navigate(destination, { replace: true })
+        const returnTo = from || location.state?.from
+        const destination = typeof returnTo === 'string'
+          ? returnTo
+          : returnTo
+            ? { pathname: returnTo.pathname, search: returnTo.search, hash: returnTo.hash }
+            : '/'
+        navigate(data.user.role === 'admin' ? '/admin' : destination, { replace: true })
       }
     } catch (requestError) { setError(getErrorMessage(requestError, 'The castle could not complete your request.')) } finally { setSubmitting(false) }
   }

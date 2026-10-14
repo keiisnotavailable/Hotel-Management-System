@@ -19,6 +19,7 @@ import AdminRoute from './admin/components/AdminRoute'
 import AdminLayout from './admin/components/AdminLayout'
 import AdminPlaceholderPage from './admin/pages/AdminPlaceholderPage'
 import AdminDashboard from './admin/pages/AdminDashboard'
+import AdminRoomsPage from './admin/pages/AdminRoomsPage'
 
 function AdminApiAuthHandler() {
   const navigate = useNavigate()
@@ -38,7 +39,7 @@ function Application() {
   return <BrowserRouter><AdminApiAuthHandler /><Routes>
     <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
       <Route index element={<AdminDashboard />} />
-      <Route path="rooms" element={<AdminPlaceholderPage title="Crypts" subtitle="Manage rooms." />} />
+      <Route path="rooms" element={<AdminRoomsPage />} />
       <Route path="rooms/new" element={<AdminPlaceholderPage title="New crypt" subtitle="Add a room to the castle." />} />
       <Route path="rooms/:id/edit" element={<AdminPlaceholderPage title="Edit crypt" subtitle="Manage this room." />} />
       <Route path="users" element={<AdminPlaceholderPage title="Monsters" subtitle="Manage guests and staff." />} />

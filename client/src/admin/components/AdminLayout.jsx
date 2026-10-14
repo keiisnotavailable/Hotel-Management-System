@@ -12,12 +12,12 @@ const links = [
   { to: '/admin/reservations', label: 'Reservations' },
 ]
 
-function SidebarLinks({ onNavigate }) {
+function SidebarLinks({ onNavigate, onSignOut }) {
   return <nav className="admin-sidebar-nav" aria-label="Admin navigation">
     {links.map(({ to, label, end }) => <NavLink key={to} to={to} end={end} onClick={onNavigate} className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}>
       <span className="admin-nav-marker" aria-hidden="true" />{label}
     </NavLink>)}
-    <Link to="/" className="admin-nav-link admin-back-link" onClick={onNavigate}>Back to site</Link>
+    <button type="button" className="admin-nav-link admin-signout admin-sidebar-signout" onClick={onSignOut}>Sign Out</button>
   </nav>
 }
 
@@ -38,18 +38,17 @@ export default function AdminLayout() {
   return <div className="admin-shell">
     <aside className="admin-sidebar">
       <Link to="/admin" className="admin-brand"><Moon size={20} /><span>Moonstoria</span></Link>
-      <SidebarLinks />
+      <SidebarLinks onSignOut={logout} />
     </aside>
     <Drawer open={drawerOpen} onClose={closeDrawer} label="Admin navigation">
       <Link to="/admin" className="admin-brand" onClick={() => setDrawerOpen(false)}><Moon size={20} /><span>Moonstoria</span></Link>
-      <SidebarLinks onNavigate={() => setDrawerOpen(false)} />
+      <SidebarLinks onNavigate={closeDrawer} onSignOut={() => { closeDrawer(); logout() }} />
     </Drawer>
     <div className="admin-main">
       <header className="admin-topbar">
         <button type="button" className="admin-menu-button" onClick={() => setDrawerOpen(true)} aria-label="Open admin navigation"><Menu size={21} /></button>
         <div className="admin-topbar-spacer" />
         <span className="admin-user-name">{user?.name}</span>
-        <button type="button" className="admin-signout" onClick={logout}>Sign Out</button>
       </header>
       <main className="admin-content"><Outlet /></main>
     </div>

@@ -4,7 +4,7 @@ import User from '../models/User.js'
 import Room from '../models/Room.js'
 
 function publicUser(user) {
-  return { id: user._id, name: user.name, email: user.email, role: user.role, centuryLoyaltyPoints: user.centuryLoyaltyPoints, phone: user.phone, address: user.address, profileImage: user.profileImage }
+  return { id: user._id, name: user.name, email: user.email, role: user.role, centuryLoyaltyPoints: user.centuryLoyaltyPoints, phone: user.phone, address: user.address, profileImage: user.profileImage, preferences: user.preferences }
 }
 
 export function getProfile(req, res) { return res.json({ user: publicUser(req.user) }) }
@@ -37,7 +37,8 @@ export async function changePassword(req, res) {
 
 export async function getSavedRooms(req, res) {
   const user = await User.findById(req.user._id).populate({ path: 'savedRooms', match: { status: 'available' }, select: '-__v' })
-  return res.json({ rooms: user.savedRooms || [], savedRooms: user.savedRooms || [] })
+  const rooms = (user.savedRooms || []).filter(Boolean)
+  return res.json({ rooms, savedRooms: rooms })
 }
 
 export async function toggleSavedRoom(req, res) {
@@ -56,4 +57,28 @@ export async function toggleSavedRoom(req, res) {
   }
   await user.save()
   return res.json({ saved, roomId: room._id, savedRooms: user.savedRooms })
+}
+
+const preferenceOptions = {
+  bedType: ['any', 'single', 'double', 'queen', 'king'],
+  roomType: ['any', 'Crypt', 'Den', 'Suite', 'Tower'],
+  smokingPreference: ['non-smoking', 'smoking'],
+  floorPreference: ['any', 'low', 'high'],
+}
+
+export async function getPreferences(req, res) {
+  return res.json({ preferences: req.user.preferences })
+}
+
+export async function updatePreferences(req, res) {
+  const { bedType, roomType, smokingPreference, floorPreference, emailNotifications } = req.body
+  for (const [field, allowedValues] of Object.entries(preferenceOptions)) {
+    if (!allowedValues.includes(req.body[field])) return res.status(400).json({ message: `A valid ${field} preference is required.` })
+  }
+  if (!emailNotifications || typeof emailNotifications.bookingConfirmations !== 'boolean' || typeof emailNotifications.promotions !== 'boolean') {
+    return res.status(400).json({ message: 'Valid email notification preferences are required.' })
+  }
+  req.user.preferences = { bedType, roomType, smokingPreference, floorPreference, emailNotifications }
+  await req.user.save()
+  return res.json({ preferences: req.user.preferences })
 }

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowDownUp, Ellipsis, Plus, Search, Star, Wrench } from 'lucide-react'
 import { adminApi, getAdminErrorMessage } from '../lib/adminApi'
+import DropdownMenu from '../../components/DropdownMenu'
+import SelectControl from '../../components/SelectControl'
 import ConfirmModal from '../components/ConfirmModal'
 import EmptyState from '../components/EmptyState'
 import Pagination from '../components/Pagination'
@@ -80,16 +82,18 @@ function RoomStatusSwitch({ room, busy, onToggle }) {
 }
 
 function RoomActions({ room, busy, search, onStatus, onDelete }) {
-  return <details className="admin-room-actions-menu">
-    <summary aria-label={`Actions for ${room.name}`} aria-disabled={busy}><Ellipsis size={19} /></summary>
-    <div className="admin-room-actions-popover">
-      <Link to={`/admin/rooms/${room._id || room.id}/edit${search}`} aria-disabled={busy} onClick={(event) => busy && event.preventDefault()}>Edit</Link>
-      <button type="button" disabled={busy} onClick={() => onStatus(room, room.status === 'available' ? 'maintenance' : 'available')}>
+  return <DropdownMenu
+    label={`Actions for ${room.name}`}
+    minWidth={155}
+    menuClassName="admin-room-actions-popover"
+    trigger={<button type="button" className="admin-room-actions-trigger" aria-label={`Actions for ${room.name}`} disabled={busy}><Ellipsis size={19} /></button>}
+  >
+      <Link role="menuitem" to={`/admin/rooms/${room._id || room.id}/edit${search}`} aria-disabled={busy} onClick={(event) => busy && event.preventDefault()}>Edit</Link>
+      <button type="button" role="menuitem" disabled={busy} onClick={() => onStatus(room, room.status === 'available' ? 'maintenance' : 'available')}>
         Set to {room.status === 'available' ? 'Maintenance' : 'Available'}
       </button>
-      <button type="button" className="danger" disabled={busy} onClick={() => onDelete(room)}>Delete</button>
-    </div>
-  </details>
+      <button type="button" role="menuitem" className="danger" disabled={busy} onClick={() => onDelete(room)}>Delete</button>
+  </DropdownMenu>
 }
 
 function RoomThumbnail({ room }) {
@@ -260,15 +264,15 @@ export default function AdminRoomsPage() {
       <label className="admin-rooms-search"><Search size={16} aria-hidden="true" /><span className="sr-only">Search crypts</span>
         <input type="search" value={searchInput} placeholder="Search crypts…" onChange={(event) => setSearchInput(event.target.value)} />
       </label>
-      <label className="admin-rooms-filter"><span>Type</span><select value={type} onChange={(event) => updateFilters({ type: event.target.value })}>
+      <label className="admin-rooms-filter"><span>Type</span><SelectControl value={type} onChange={(event) => updateFilters({ type: event.target.value })}>
         <option value="">All types</option>{TYPES.map((roomType) => <option key={roomType} value={roomType}>{roomType}</option>)}
-      </select></label>
-      <label className="admin-rooms-filter"><span>Status</span><select value={status} onChange={(event) => updateFilters({ status: event.target.value })}>
+      </SelectControl></label>
+      <label className="admin-rooms-filter"><span>Status</span><SelectControl value={status} onChange={(event) => updateFilters({ status: event.target.value })}>
         <option value="">All statuses</option><option value="available">Available</option><option value="maintenance">Maintenance</option>
-      </select></label>
-      <label className="admin-rooms-filter admin-rooms-sort"><span><ArrowDownUp size={12} /> Sort</span><select value={sort} onChange={(event) => updateFilters({ sort: event.target.value })}>
+      </SelectControl></label>
+      <label className="admin-rooms-filter admin-rooms-sort"><span><ArrowDownUp size={12} /> Sort</span><SelectControl value={sort} onChange={(event) => updateFilters({ sort: event.target.value })}>
         <option value="name">Name A–Z</option><option value="-name">Name Z–A</option><option value="price">Price low–high</option><option value="-price">Price high–low</option><option value="rating">Top rated</option><option value="status">Status</option>
-      </select></label>
+      </SelectControl></label>
     </div>
 
     {error && <div className={`admin-dashboard-error admin-rooms-error ${!result ? 'is-fatal' : ''}`} role="alert"><span>{error}</span><button type="button" disabled={loading} onClick={reload}>Retry</button></div>}

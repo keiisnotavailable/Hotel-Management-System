@@ -1,9 +1,21 @@
-import { Menu, UserCircle, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import logo from '../images/logo.png'
 import { getUploadedAssetUrl } from '../lib/api'
+import DropdownMenu from './DropdownMenu'
+
+function AccountAvatar({ user, imageUrl }) {
+  const [imageFailed, setImageFailed] = useState(false)
+
+  useEffect(() => { setImageFailed(false) }, [imageUrl])
+
+  const initials = (user.name || user.email || 'M').split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()
+  return imageUrl && !imageFailed
+    ? <img src={imageUrl} alt="" className="navbar-profile-photo" onError={() => setImageFailed(true)} />
+    : <span className="navbar-profile-fallback" aria-hidden="true">{initials}</span>
+}
 
 function NavLink({ to, label, active, onClick }) {
   return <Link to={to} onClick={onClick} className={`navbar-link ${active ? 'active' : ''}`}>{label}</Link>
@@ -61,7 +73,21 @@ export default function Navbar({ onAuth }) {
         <NavLink to="/crypts" label="Rooms" active={isActive('/crypts')} />
         <NavLink to="/contact" label="Contact" active={isActive('/contact')} />
       </div>
-      {user ? <div className="navbar-account"><button className="account-button" type="button" onClick={() => setOpen(open === 'account' ? null : 'account')} aria-expanded={open === 'account'} aria-haspopup="menu" aria-controls="navbar-account-menu">{profilePhoto ? <img src={profilePhoto} alt="" className="navbar-profile-photo" /> : <UserCircle size={18} />} <span>{user.name}</span></button>{open === 'account' && <div id="navbar-account-menu" className="navbar-menu account-menu" role="menu"><Link role="menuitem" to="/profile" onClick={closeMenus}>Profile</Link><Link role="menuitem" to="/my-reservations" onClick={closeMenus}>My Reservations</Link><Link role="menuitem" to="/saved-crypts" onClick={closeMenus}>Saved Crypts</Link>{isAdmin && <Link role="menuitem" to="/admin" onClick={closeMenus}>Admin</Link>}<button role="menuitem" type="button" onClick={logout}>Sign Out</button></div>}</div> : <button className="account-button" type="button" onClick={openAuth}>Sign in / Sign up</button>}
+      {user ? <div className="navbar-account"><DropdownMenu
+        id="navbar-account-menu"
+        label="Account"
+        open={open === 'account'}
+        onOpenChange={(nextOpen) => setOpen(nextOpen ? 'account' : null)}
+        minWidth={200}
+        menuClassName="navbar-menu account-menu"
+        trigger={<button className="account-button" type="button"><AccountAvatar user={user} imageUrl={profilePhoto} /><span>{user.name}</span></button>}
+      >
+        <Link role="menuitem" to="/profile" onClick={closeMenus}>Profile</Link>
+        <Link role="menuitem" to="/my-reservations" onClick={closeMenus}>My Reservations</Link>
+        <Link role="menuitem" to="/saved-crypts" onClick={closeMenus}>Saved Crypts</Link>
+        {isAdmin && <Link role="menuitem" to="/admin" onClick={closeMenus}>Admin</Link>}
+        <button role="menuitem" type="button" onClick={logout}>Sign Out</button>
+      </DropdownMenu></div> : <button className="account-button" type="button" onClick={openAuth}>Sign in / Sign up</button>}
       <button className="navbar-toggle" type="button" onClick={() => setMobileOpen(!mobileOpen)} aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={mobileOpen} aria-controls="navbar-mobile-panel">{mobileOpen ? <X size={20} /> : <Menu size={20} />}</button>
     </div>
     {mobileOpen && <div id="navbar-mobile-panel" className="navbar-mobile-panel">

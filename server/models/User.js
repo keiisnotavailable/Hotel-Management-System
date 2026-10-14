@@ -12,6 +12,16 @@ const userSchema = new mongoose.Schema(
     isActive: { type: Boolean, default: true },
     centuryLoyaltyPoints: { type: Number, default: 0, min: 0 },
     savedRooms: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Room' }],
+    preferences: {
+      bedType: { type: String, enum: ['any', 'single', 'double', 'queen', 'king'], default: 'any' },
+      roomType: { type: String, enum: ['any', 'Crypt', 'Den', 'Suite', 'Tower'], default: 'any' },
+      smokingPreference: { type: String, enum: ['non-smoking', 'smoking'], default: 'non-smoking' },
+      floorPreference: { type: String, enum: ['any', 'low', 'high'], default: 'any' },
+      emailNotifications: {
+        bookingConfirmations: { type: Boolean, default: true },
+        promotions: { type: Boolean, default: false },
+      },
+    },
   },
   { timestamps: true },
 )

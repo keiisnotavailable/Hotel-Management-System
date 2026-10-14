@@ -17,10 +17,10 @@ import NotFoundPage from './pages/NotFoundPage'
 import AboutPage from './pages/AboutPage'
 import AdminRoute from './admin/components/AdminRoute'
 import AdminLayout from './admin/components/AdminLayout'
-import AdminPlaceholderPage from './admin/pages/AdminPlaceholderPage'
 import AdminDashboard from './admin/pages/AdminDashboard'
 import AdminRoomsPage from './admin/pages/AdminRoomsPage'
 import AdminUsersPage from './admin/pages/AdminUsersPage'
+import AdminReservationsPage from './admin/pages/AdminReservationsPage'
 import RoomForm from './admin/components/RoomForm'
 
 function AdminApiAuthHandler() {
@@ -45,7 +45,7 @@ function Application() {
       <Route path="rooms/new" element={<RoomForm mode="create" />} />
       <Route path="rooms/:id/edit" element={<RoomForm mode="edit" />} />
       <Route path="users" element={<AdminUsersPage />} />
-      <Route path="reservations" element={<AdminPlaceholderPage title="Reservations" subtitle="Manage stays from Dusk to Dawn." />} />
+      <Route path="reservations" element={<AdminReservationsPage />} />
     </Route>
     <Route element={<Layout onAuth={(mode, from) => setAuth({ mode, from })} />}>
       <Route path="/" element={<HomePage onAuth={(mode) => setAuth({ mode })} />} />

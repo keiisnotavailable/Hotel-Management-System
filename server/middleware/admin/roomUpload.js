@@ -27,9 +27,27 @@ export const uploadRoomImage = multer({
   },
 })
 
+export const uploadProfileImage = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024, files: 1 },
+  fileFilter: (_req, file, callback) => {
+    if (!extensionsByMimeType[file.mimetype]) return callback(new Error('Only JPG, PNG, and WebP images are allowed.'))
+    return callback(null, true)
+  },
+})
+
 export function handleRoomUploadError(error, _req, res, next) {
   if (!error) return next()
   if (error.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ message: 'Image must be 5 MB or smaller.' })
+  if (error.code === 'LIMIT_UNEXPECTED_FILE') return res.status(400).json({ message: 'Upload one image using the "image" field.' })
+  if (error instanceof multer.MulterError) return res.status(400).json({ message: error.message })
+  if (error.message === 'Only JPG, PNG, and WebP images are allowed.') return res.status(400).json({ message: error.message })
+  return next(error)
+}
+
+export function handleProfileUploadError(error, _req, res, next) {
+  if (!error) return next()
+  if (error.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ message: 'Profile photo must be 2 MB or smaller.' })
   if (error.code === 'LIMIT_UNEXPECTED_FILE') return res.status(400).json({ message: 'Upload one image using the "image" field.' })
   if (error instanceof multer.MulterError) return res.status(400).json({ message: error.message })
   if (error.message === 'Only JPG, PNG, and WebP images are allowed.') return res.status(400).json({ message: error.message })

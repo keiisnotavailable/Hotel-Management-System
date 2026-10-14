@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Ellipsis, Search, UserRound } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import DropdownMenu from '../../components/DropdownMenu'
+import SelectControl from '../../components/SelectControl'
 import { adminApi, getAdminErrorMessage } from '../lib/adminApi'
 import { getUploadedAssetUrl } from '../../lib/api'
 import ConfirmModal from '../components/ConfirmModal'
@@ -57,26 +59,22 @@ function UserActions({ user, busy, self, adminCount, activeAdminCount, onAction 
   const blockReason = self ? 'You cannot block your own account.' : isAdmin && user.isActive && activeAdminCount <= 1 ? 'The last active admin cannot be blocked.' : ''
   const deleteReason = self ? 'You cannot delete your own account.' : isAdmin && adminCount <= 1 ? 'The last admin cannot be deleted.' : ''
 
-  function run(event, action) {
-    const menu = event.currentTarget.closest('details')
-    if (menu) menu.open = false
-    onAction(action, user)
-  }
-
-  return <details className="admin-user-actions-menu">
-    <summary aria-label={`Actions for ${user.name}`} aria-disabled={busy}><Ellipsis size={19} /></summary>
-    <div className="admin-user-actions-popover">
-      <button type="button" disabled={busy} onClick={(event) => run(event, 'view')}>View</button>
-      <button type="button" disabled={busy} onClick={(event) => run(event, 'edit')}>Edit</button>
-      <button type="button" disabled={busy || Boolean(demoteReason)} title={demoteReason || ''} onClick={(event) => run(event, 'role')}>
+  return <DropdownMenu
+    label={`Actions for ${user.name}`}
+    minWidth={155}
+    menuClassName="admin-user-actions-popover"
+    trigger={<button type="button" className="admin-user-actions-trigger" aria-label={`Actions for ${user.name}`} disabled={busy}><Ellipsis size={19} /></button>}
+  >
+      <button type="button" role="menuitem" disabled={busy} onClick={() => onAction('view', user)}>View</button>
+      <button type="button" role="menuitem" disabled={busy} onClick={() => onAction('edit', user)}>Edit</button>
+      <button type="button" role="menuitem" disabled={busy || Boolean(demoteReason)} title={demoteReason || ''} onClick={() => onAction('role', user)}>
         Make {isAdmin ? 'guest' : 'admin'}
       </button>
-      <button type="button" disabled={busy || Boolean(blockReason)} title={blockReason || ''} onClick={(event) => run(event, 'status')}>
+      <button type="button" role="menuitem" disabled={busy || Boolean(blockReason)} title={blockReason || ''} onClick={() => onAction('status', user)}>
         {user.isActive ? 'Block' : 'Unblock'}
       </button>
-      <button type="button" className="danger" disabled={busy || Boolean(deleteReason)} title={deleteReason || ''} onClick={(event) => run(event, 'delete')}>Delete</button>
-    </div>
-  </details>
+      <button type="button" role="menuitem" className="danger" disabled={busy || Boolean(deleteReason)} title={deleteReason || ''} onClick={() => onAction('delete', user)}>Delete</button>
+  </DropdownMenu>
 }
 
 function UserDrawer({ open, user, mode, detail, loading, error, editValues, setEditValues, onClose, onEdit, onSave, saving }) {
@@ -325,8 +323,8 @@ export default function AdminUsersPage() {
     </div>
     <div className="admin-users-toolbar">
       <label className="admin-rooms-search"><Search size={16} aria-hidden="true" /><span className="sr-only">Search monsters</span><input type="search" value={searchInput} placeholder="Search name or email…" onChange={(event) => setSearchInput(event.target.value)} /></label>
-      <label className="admin-rooms-filter"><span>Role</span><select value={role} onChange={(event) => updateFilters({ role: event.target.value })}><option value="">All roles</option><option value="guest">Guest</option><option value="admin">Admin</option></select></label>
-      <label className="admin-rooms-filter"><span>Status</span><select value={status} onChange={(event) => updateFilters({ status: event.target.value })}><option value="">All statuses</option><option value="active">Active</option><option value="blocked">Blocked</option></select></label>
+      <label className="admin-rooms-filter"><span>Role</span><SelectControl value={role} onChange={(event) => updateFilters({ role: event.target.value })}><option value="">All roles</option><option value="guest">Guest</option><option value="admin">Admin</option></SelectControl></label>
+      <label className="admin-rooms-filter"><span>Status</span><SelectControl value={status} onChange={(event) => updateFilters({ status: event.target.value })}><option value="">All statuses</option><option value="active">Active</option><option value="blocked">Blocked</option></SelectControl></label>
     </div>
 
     {error && <div className={`admin-dashboard-error admin-users-error ${!result ? 'is-fatal' : ''}`} role="alert"><span>{error}</span><button type="button" disabled={loading} onClick={reload}>Retry</button></div>}

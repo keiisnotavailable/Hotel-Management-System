@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowDown, ArrowUp, Plus, Star, Upload, X } from 'lucide-react'
 import { getRoomImage } from '../../utils/roomImages'
+import SelectControl from '../../components/SelectControl'
 import ConfirmModal from './ConfirmModal'
 import Skeleton from './Skeleton'
 import { adminApi, getAdminErrorMessage } from '../lib/adminApi'
@@ -314,9 +315,9 @@ export default function RoomForm({ mode }) {
           <div className="admin-form-section-heading"><span>01</span><div><h2>Basics</h2><p>Give this crypt its identity.</p></div></div>
           <div className="admin-form-grid">
             <label className="admin-form-field span-2"><span>Name <b>*</b></span><input value={form.name} maxLength={120} onChange={(event) => updateField('name', event.target.value)} aria-invalid={Boolean(errors.name)} />{fieldError(errors, 'name')}</label>
-            <label className="admin-form-field"><span>Type <b>*</b></span><select value={form.type} onChange={(event) => updateField('type', event.target.value)}>{ROOM_TYPES.map((type) => <option key={type}>{type}</option>)}</select>{fieldError(errors, 'type')}</label>
+            <label className="admin-form-field"><span>Type <b>*</b></span><SelectControl value={form.type} onChange={(event) => updateField('type', event.target.value)}>{ROOM_TYPES.map((type) => <option key={type}>{type}</option>)}</SelectControl>{fieldError(errors, 'type')}</label>
             <label className="admin-form-field"><span>Tags</span><input value={form.tagline} maxLength={120} onChange={(event) => updateField('tagline', event.target.value)} /></label>
-            <label className="admin-form-field"><span>Status</span><select value={form.status} onChange={(event) => updateField('status', event.target.value)}><option value="available">Available</option><option value="maintenance">Maintenance</option></select>{fieldError(errors, 'status')}</label>
+            <label className="admin-form-field"><span>Status</span><SelectControl value={form.status} onChange={(event) => updateField('status', event.target.value)}><option value="available">Available</option><option value="maintenance">Maintenance</option></SelectControl>{fieldError(errors, 'status')}</label>
             {form.status === 'maintenance' && <label className="admin-form-field span-2"><span>Maintenance note</span><textarea rows="2" maxLength="500" value={form.maintenanceNote} onChange={(event) => updateField('maintenanceNote', event.target.value)} /></label>}
           </div>
         </section>

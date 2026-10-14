@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { getAdminStats } from '../../controllers/admin/statsController.js'
 import { adminOnly } from '../../middleware/admin/adminOnly.js'
 import { requireAuth } from '../../middleware/auth.js'
+import adminReservationRoutes from './adminReservationRoutes.js'
 import adminRoomRoutes from './adminRoomRoutes.js'
 import adminUserRoutes from './adminUserRoutes.js'
 
@@ -17,6 +18,7 @@ router.get('/stats', async (req, res, next) => {
   }
 })
 router.use(adminRoomRoutes)
+router.use('/reservations', adminReservationRoutes)
 router.use('/users', adminUserRoutes)
 
 export default router

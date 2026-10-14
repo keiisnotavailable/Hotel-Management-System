@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import axios from 'axios'
 import RoomCard from '../components/RoomCard'
+import SelectControl from '../components/SelectControl'
 import { API_BASE, getErrorMessage } from '../lib/api'
 
 export default function CryptsPage() {
@@ -36,9 +37,9 @@ export default function CryptsPage() {
         <h1 className="mt-2 font-display text-4xl uppercase">Explore the crypts</h1>
         <div className="mt-8 grid gap-2 border border-ink/20 bg-parchment/70 p-3 sm:grid-cols-2 lg:grid-cols-6">
           <input className="border border-ink/20 bg-white/50 px-3 py-2 text-xs lg:col-span-2" placeholder="Search rooms" value={filters.search} onChange={(event) => update('search', event.target.value)} />
-          <select className="border border-ink/20 bg-white/50 px-2 text-xs" value={filters.type} onChange={(event) => update('type', event.target.value)}><option value="">All types</option><option>Crypt</option><option>Den</option><option>Suite</option><option>Tower</option></select>
+          <SelectControl className="border border-ink/20 bg-white/50 px-2 text-xs" value={filters.type} onChange={(event) => update('type', event.target.value)}><option value="">All types</option><option>Crypt</option><option>Den</option><option>Suite</option><option>Tower</option></SelectControl>
           <input className="border border-ink/20 bg-white/50 px-2 text-xs" type="number" min="1" placeholder="Capacity" value={filters.capacity} onChange={(event) => update('capacity', event.target.value)} />
-          <select className="border border-ink/20 bg-white/50 px-2 text-xs" value={filters.sort} onChange={(event) => update('sort', event.target.value)}><option value="price_asc">Price: low to high</option><option value="price_desc">Price: high to low</option><option value="capacity">Capacity</option></select>
+          <SelectControl className="border border-ink/20 bg-white/50 px-2 text-xs" value={filters.sort} onChange={(event) => update('sort', event.target.value)}><option value="price_asc">Price: low to high</option><option value="price_desc">Price: high to low</option><option value="capacity">Capacity</option></SelectControl>
         </div>
         {error && <p className="mt-6 text-sm text-crimson">{error}</p>}
         {loading ? <p className="mt-10 text-center text-sm text-ink/60">Opening the crypt catalogue...</p> : rooms.length ? <div className="mt-10 grid gap-5 md:grid-cols-3">{rooms.map((room) => <RoomCard key={room.id || room._id} room={room} />)}</div> : <p className="mt-10 text-center text-sm text-ink/60">No crypts available for those times.</p>}

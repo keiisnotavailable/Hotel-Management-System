@@ -53,6 +53,7 @@ option { background: #17141b; color: #f1eadb; }
 .profile-header-email { margin: 0; color: rgba(34, 27, 32, 0.7); font-size: 0.85rem; }
 .profile-photo-control { position: relative; display: grid; justify-items: start; gap: 0.35rem; margin-left: auto; }
 .profile-photo-control input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; clip-path: inset(50%); }
+.profile-photo-control .profile-secondary-button { text-align: center; }
 .profile-photo-control .profile-help, .profile-photo-control .profile-field-error { max-width: 13rem; }
 .profile-layout { position: relative; display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 1.5rem; margin-top: 1.5rem; }
 .profile-layout::before { position: absolute; top: 0; bottom: 0; left: 190px; width: 1px; background: var(--site-border); content: ''; }

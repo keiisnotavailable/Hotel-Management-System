@@ -4,6 +4,7 @@ import Room from '../../models/Room.js'
 import User from '../../models/User.js'
 import { MIN_STAY_HOURS } from '../../config/defaults.js'
 import { calculatePrice, checkAvailability } from '../reservationService.js'
+import { syncReservationStatuses } from '../reservationLifecycleService.js'
 
 const STATUSES = ['confirmed', 'upcoming', 'ongoing', 'completed', 'cancelled']
 const SORTS = {
@@ -59,13 +60,6 @@ function nextDay(value) {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`
 }
 
-function reservationStatus(reservation, now = new Date()) {
-  if (reservation.status === 'cancelled') return 'cancelled'
-  if (reservation.checkOut <= now) return 'completed'
-  if (reservation.checkIn <= now) return 'ongoing'
-  return 'upcoming'
-}
-
 function publicReservation(reservation) {
   const value = reservation.toObject
     ? reservation.toObject({ versionKey: false })
@@ -73,7 +67,7 @@ function publicReservation(reservation) {
   if (!value.room) value.room = { name: value.roomName, slug: value.roomSlug }
   if (!value.user) value.user = { name: value.userName, email: value.userEmail }
   value.id = value._id
-  value.displayStatus = reservationStatus(value)
+  value.displayStatus = value.status
   return value
 }
 
@@ -82,16 +76,10 @@ async function buildFilter(query, now) {
   const status = String(query.status || '')
   if (status && !STATUSES.includes(status)) throw new AdminReservationError(400, 'Invalid reservation status.')
 
-  if (status === 'cancelled') clauses.push({ status: 'cancelled' })
-  else if (status) {
-    clauses.push({ status: 'confirmed' })
-    if (status === 'upcoming') clauses.push({ checkIn: { $gt: now } })
-    if (status === 'ongoing') clauses.push({ checkIn: { $lte: now }, checkOut: { $gt: now } })
-    if (status === 'completed') clauses.push({ checkOut: { $lte: now } })
-    if (status === 'confirmed' && query.upcoming === 'true') clauses.push({ checkIn: { $gt: now } })
-  } else if (query.upcoming === 'true') {
-    clauses.push({ status: 'confirmed' }, { checkIn: { $gt: now } })
-  }
+  if (status === 'confirmed' && query.upcoming === 'true') {
+    clauses.push({ status: { $in: ['confirmed', 'upcoming'] } }, { checkIn: { $gt: now } })
+  } else if (status) clauses.push({ status })
+  else if (query.upcoming === 'true') clauses.push({ status: { $in: ['confirmed', 'upcoming'] } }, { checkIn: { $gt: now } })
 
   if (query.roomId) {
     if (!mongoose.isValidObjectId(query.roomId)) throw new AdminReservationError(400, 'A supplied room identifier is invalid.')
@@ -135,6 +123,7 @@ async function buildFilter(query, now) {
 }
 
 export async function listAdminReservations(query) {
+  await syncReservationStatuses()
   const page = paginationValue(query.page, 1, Number.MAX_SAFE_INTEGER)
   const limit = paginationValue(query.limit, 20, 100)
   const now = new Date()
@@ -152,7 +141,8 @@ export async function listAdminReservations(query) {
     Reservation.countDocuments(filter),
     Reservation.aggregate([
       { $match: filter },
-      { $group: { _id: null, total: { $sum: { $cond: [{ $eq: ['$status', 'confirmed'] }, '$totalPrice', 0] } } } },
+      { $match: { status: { $ne: 'cancelled' } } },
+      { $group: { _id: null, total: { $sum: '$totalPrice' } } },
     ]),
   ])
 
@@ -168,6 +158,7 @@ export async function listAdminReservations(query) {
 
 async function findReservation(id) {
   if (!mongoose.isValidObjectId(id)) throw new AdminReservationError(400, 'A supplied reservation identifier is invalid.')
+  await syncReservationStatuses({ id })
   const reservation = await Reservation.findById(id)
     .populate('room', 'name slug type images pricePerNight')
     .populate('user', 'name email')
@@ -196,7 +187,7 @@ function parseDates(checkIn, checkOut) {
 }
 
 function assertEditable(reservation) {
-  if (reservation.status !== 'confirmed' || reservationStatus(reservation) === 'completed') {
+  if (!['confirmed', 'upcoming', 'ongoing'].includes(reservation.status)) {
     throw new AdminReservationError(400, 'Completed or cancelled reservations cannot be changed.')
   }
 }
@@ -239,6 +230,17 @@ export async function updateAdminReservationDates(id, input) {
   reservation.checkOut = end
   reservation.nights = nights
   reservation.totalPrice = totalPrice
+  const now = new Date()
+  if (end <= now) {
+    reservation.status = 'completed'
+    reservation.completedAt = now
+  } else if (start <= now) {
+    reservation.status = 'ongoing'
+    reservation.completedAt = undefined
+  } else {
+    reservation.status = 'upcoming'
+    reservation.completedAt = undefined
+  }
   await reservation.save()
   return getAdminReservation(reservation._id)
 }
@@ -253,6 +255,16 @@ export async function cancelAdminReservation(id, reason) {
   reservation.cancellationReason = (reason || '').trim()
   reservation.cancelledBy = 'admin'
   reservation.cancelledAt = new Date()
+  await reservation.save()
+  return getAdminReservation(reservation._id)
+}
+
+export async function completeAdminReservation(id) {
+  const reservation = await findReservation(id)
+  if (reservation.status === 'cancelled') throw new AdminReservationError(400, 'Cancelled reservations cannot be completed.')
+  if (reservation.status === 'completed') throw new AdminReservationError(400, 'This reservation is already completed.')
+  reservation.status = 'completed'
+  reservation.completedAt = new Date()
   await reservation.save()
   return getAdminReservation(reservation._id)
 }

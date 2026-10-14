@@ -53,7 +53,7 @@ export async function checkAvailability({ roomId, checkIn, checkOut, excludeRese
   const bufferedStart = new Date(checkIn.getTime() - CLEANING_BUFFER_MINUTES * 60000)
   const bufferedEnd = new Date(checkOut.getTime() + CLEANING_BUFFER_MINUTES * 60000)
   const filter = {
-    status: 'confirmed',
+    status: { $in: ['confirmed', 'upcoming', 'ongoing'] },
     checkIn: { $lt: bufferedEnd },
     checkOut: { $gt: bufferedStart },
   }

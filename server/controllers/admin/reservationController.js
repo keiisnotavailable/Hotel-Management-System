@@ -1,6 +1,7 @@
 import {
   cancelAdminReservation as cancelReservation,
   checkAdminReservationAvailability,
+  completeAdminReservation as completeReservation,
   getAdminReservation as getReservation,
   listAdminReservations as listReservations,
   updateAdminReservationDates,
@@ -24,4 +25,8 @@ export async function updateAdminReservation(req, res) {
 
 export async function cancelAdminReservation(req, res) {
   return res.json({ reservation: await cancelReservation(req.params.id, req.body.reason) })
+}
+
+export async function completeAdminReservation(req, res) {
+  return res.json({ reservation: await completeReservation(req.params.id) })
 }

@@ -21,13 +21,13 @@ function EmptyPanel({ title, text, actionLabel = 'Browse Rooms' }) {
   return <section className="profile-empty-panel"><h2>{title}</h2><p>{text}</p><Link to="/crypts" className="profile-primary-button">{actionLabel}</Link></section>
 }
 
-function LoadError({ message, onRetry }) {
-  return <div className="profile-panel"><p className="profile-status profile-error" role="alert">{message}</p><button type="button" className="profile-secondary-button" onClick={onRetry}>Retry</button></div>
+function LoadError({ title, message, onRetry }) {
+  return <section className="profile-panel"><h2>{title}</h2><p className="profile-status profile-error" role="alert">{message}</p><button type="button" className="profile-secondary-button" onClick={onRetry}>Retry</button></section>
 }
 
 function BookingPanel({ bookings, loading, error, onRetry }) {
   if (loading) return <section className="profile-panel" aria-live="polite"><h2>My bookings</h2><p className="profile-panel-description">Gathering your reservations...</p></section>
-  if (error) return <LoadError message={error} onRetry={onRetry} />
+  if (error) return <LoadError title="My bookings" message={error} onRetry={onRetry} />
   if (!bookings.length) return <EmptyPanel title="My bookings" text="No bookings yet. Your next moonlit stay is waiting." />
 
   const now = Date.now()
@@ -55,7 +55,7 @@ function BookingPanel({ bookings, loading, error, onRetry }) {
 
 function FavoritesPanel({ rooms, loading, error, onRetry, onRemove, busyRoomId }) {
   if (loading) return <section className="profile-panel" aria-live="polite"><h2>Favorites</h2><p className="profile-panel-description">Gathering your saved crypts...</p></section>
-  if (error && !rooms.length) return <LoadError message={error} onRetry={onRetry} />
+  if (error && !rooms.length) return <LoadError title="Favorites" message={error} onRetry={onRetry} />
   if (!rooms.length) return <EmptyPanel title="Favorites" text="No saved rooms yet. Keep your favorite crypts close." />
 
   return <section className="profile-panel">
@@ -299,8 +299,10 @@ export default function ProfilePage() {
     body.append('image', file)
     try {
       const { data } = await axios.post(`${API_BASE}/users/profile/photo`, body, authConfig())
-      setProfilePhoto(getUploadedAssetUrl(data.user.profileImage || ''))
-      signIn(data.user, localStorage.getItem('hotelTransylvaniaToken'))
+      const profileImage = data.user?.profileImage
+      if (!profileImage) throw new Error('The server did not return the uploaded profile photo.')
+      setProfilePhoto(getUploadedAssetUrl(profileImage))
+      signIn({ ...user, profileImage }, localStorage.getItem('hotelTransylvaniaToken'))
       setPhotoMessage('Profile photo updated.')
     } catch (requestError) {
       setProfilePhoto(previousPhoto)

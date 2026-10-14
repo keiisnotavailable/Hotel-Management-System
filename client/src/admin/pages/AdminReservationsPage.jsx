@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ArrowDownUp, CalendarDays, Eye, Pencil, Search, X } from 'lucide-react'
+import { ArrowDownUp, CalendarDays, Check, Eye, Pencil, Search, X } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import DateTimePicker from '../../components/DateTimePicker'
 import SelectControl from '../../components/SelectControl'
@@ -220,6 +220,38 @@ function CancelReservationModal({ reservation, onClose, onCancelled }) {
   </div>
 }
 
+function CompleteReservationModal({ reservation, onClose, onCompleted }) {
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const id = reservation._id || reservation.id
+
+  async function complete() {
+    setBusy(true)
+    setError('')
+    try {
+      const { data } = await adminApi.patch(`/reservations/${id}/complete`)
+      onCompleted(data.reservation)
+    } catch (requestError) {
+      setError(getAdminErrorMessage(requestError, 'The reservation could not be marked as completed.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return <div className="admin-modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && !busy && onClose()}>
+    <section className="admin-confirm-modal admin-reservation-modal" role="alertdialog" aria-modal="true" aria-labelledby="admin-reservation-complete-title">
+      <p className="admin-kicker">Complete reservation</p>
+      <h2 id="admin-reservation-complete-title">Mark stay {reservationId(reservation)} as completed?</h2>
+      <p>This closes the stay for {reservation.user?.name || reservation.userName || 'this guest'} at {reservation.room?.name || reservation.roomName || 'this crypt'} now.</p>
+      {error && <p className="admin-reservation-action-error" role="alert">{error}</p>}
+      <div className="admin-modal-actions">
+        <button type="button" onClick={onClose} disabled={busy}>Keep reservation</button>
+        <button type="button" className="danger" onClick={complete} disabled={busy}>{busy ? 'Completing…' : 'Mark completed'}</button>
+      </div>
+    </section>
+  </div>
+}
+
 function ReservationDrawer({ reservation, open, loading, error, onClose }) {
   const room = reservation?.room || { name: reservation?.roomName, slug: reservation?.roomSlug }
   const user = reservation?.user || { name: reservation?.userName, email: reservation?.userEmail }
@@ -249,6 +281,7 @@ function ReservationDrawer({ reservation, open, loading, error, onClose }) {
               <div><dt>Monsters</dt><dd>{reservation.guests}</dd></div>
               <div><dt>Total</dt><dd>{formatPHP(reservation.totalPrice)}</dd></div>
               <div><dt>Created</dt><dd>{formatDateTime(reservation.createdAt)}</dd></div>
+              {reservation.completedAt && <div><dt>Completed</dt><dd>{formatDateTime(reservation.completedAt)}</dd></div>}
             </dl>
             {reservation.specialRequests && <section className="admin-reservation-detail-section"><h3>Special requests</h3><p>{reservation.specialRequests}</p></section>}
             {reservation.cancellationReason && <section className="admin-reservation-cancellation-note"><h3>Cancellation reason</h3><p>{reservation.cancellationReason}</p></section>}
@@ -280,6 +313,7 @@ export default function AdminReservationsPage() {
   const [drawerError, setDrawerError] = useState('')
   const [editReservation, setEditReservation] = useState(null)
   const [cancelReservation, setCancelReservation] = useState(null)
+  const [completeReservation, setCompleteReservation] = useState(null)
 
   useEffect(() => setSearchInput(searchParam), [searchParam])
 
@@ -371,12 +405,20 @@ export default function AdminReservationsPage() {
   function savedDates(reservation) {
     setEditReservation(null)
     setToast({ type: 'success', message: `Stay ${reservationId(reservation)} dates were updated.` })
+    if (drawerOpen && (selected?._id || selected?.id) === (reservation._id || reservation.id)) setSelected(reservation)
     reload()
   }
 
   function cancelledReservation(reservation) {
     setCancelReservation(null)
     setToast({ type: 'success', message: `Stay ${reservationId(reservation)} was cancelled.` })
+    if (drawerOpen && (selected?._id || selected?.id) === (reservation._id || reservation.id)) setSelected(reservation)
+    reload()
+  }
+
+  function completedReservation(reservation) {
+    setCompleteReservation(null)
+    setToast({ type: 'success', message: `Stay ${reservationId(reservation)} was marked completed.` })
     if (drawerOpen && (selected?._id || selected?.id) === (reservation._id || reservation.id)) setSelected(reservation)
     reload()
   }
@@ -398,6 +440,7 @@ export default function AdminReservationsPage() {
         <button type="button" title="View details" aria-label={`View reservation ${reservationId(reservation)}`} onClick={() => viewDetails(reservation)}><Eye size={15} /></button>
         <button type="button" title={locked ? 'Completed or cancelled reservations cannot be edited.' : 'Edit dates'} aria-label={`Edit dates for reservation ${reservationId(reservation)}`} disabled={locked} onClick={() => setEditReservation(reservation)}><Pencil size={15} /></button>
         <button type="button" className="danger" title={locked ? 'Completed or cancelled reservations cannot be cancelled.' : 'Cancel reservation'} aria-label={`Cancel reservation ${reservationId(reservation)}`} disabled={locked} onClick={() => setCancelReservation(reservation)}><X size={16} /></button>
+        <button type="button" title={locked ? 'Completed or cancelled reservations cannot be marked completed.' : 'Mark as completed'} aria-label={`Mark reservation ${reservationId(reservation)} completed`} disabled={locked} onClick={() => setCompleteReservation(reservation)}><Check size={15} /></button>
       </div>
     } },
   ], [drawerOpen, selected])
@@ -453,6 +496,7 @@ export default function AdminReservationsPage() {
     {selected && <ReservationDrawer reservation={selected} open={drawerOpen} loading={drawerLoading} error={drawerError} onClose={() => setDrawerOpen(false)} />}
     {editReservation && <EditDatesModal reservation={editReservation} onClose={() => setEditReservation(null)} onSaved={savedDates} />}
     {cancelReservation && <CancelReservationModal reservation={cancelReservation} onClose={() => setCancelReservation(null)} onCancelled={cancelledReservation} />}
+    {completeReservation && <CompleteReservationModal reservation={completeReservation} onClose={() => setCompleteReservation(null)} onCompleted={completedReservation} />}
     <Toast message={toast?.message} type={toast?.type} onClose={() => setToast(null)} />
   </section>
 }

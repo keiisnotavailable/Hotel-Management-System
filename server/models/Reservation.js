@@ -12,11 +12,12 @@ const reservationSchema = new mongoose.Schema({
   nights: { type: Number, required: true, min: 1 },
   totalPrice: { type: Number, required: true, min: 0 },
   guests: { type: Number, required: true, min: 1 },
-  status: { type: String, enum: ['confirmed', 'cancelled'], default: 'confirmed', index: true },
+  status: { type: String, enum: ['confirmed', 'upcoming', 'ongoing', 'completed', 'cancelled'], default: 'confirmed', index: true },
   specialRequests: { type: String, trim: true, maxlength: 1000, default: '' },
   cancellationReason: { type: String, trim: true, maxlength: 1000 },
   cancelledBy: { type: String, enum: ['admin', 'guest'] },
   cancelledAt: { type: Date },
+  completedAt: { type: Date },
 }, { timestamps: true })
 
 reservationSchema.index({ room: 1, checkIn: 1, checkOut: 1, status: 1 })

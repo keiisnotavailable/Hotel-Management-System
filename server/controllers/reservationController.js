@@ -1,6 +1,7 @@
 import Room from '../models/Room.js'
 import Reservation from '../models/Reservation.js'
 import { calculatePrice, checkAvailability, validateReservationInput } from '../services/reservationService.js'
+import { syncReservationStatuses } from '../services/reservationLifecycleService.js'
 
 function publicReservation(reservation) { return reservation.toObject({ versionKey: false }) }
 
@@ -31,6 +32,7 @@ export async function createReservation(req, res) {
     userEmail: req.user.email,
     checkIn: start,
     checkOut: end,
+    status: 'upcoming',
     nights,
     totalPrice,
     guests: guestCount,
@@ -47,6 +49,7 @@ function reservationWithSnapshotFallback(reservation) {
 }
 
 export async function listReservations(req, res) {
+  await syncReservationStatuses()
   const reservations = await Reservation.find({ user: req.user._id })
     .populate('room')
     .populate('user', 'name email')
@@ -55,17 +58,20 @@ export async function listReservations(req, res) {
 }
 
 export async function getReservation(req, res) {
-  const reservation = await Reservation.findById(req.params.id).populate('room').populate('user', 'name email')
+  let reservation = await Reservation.findById(req.params.id).populate('room').populate('user', 'name email')
   if (!reservation) return res.status(404).json({ message: 'Reservation not found.' })
   const reservationUserId = reservation.user?._id || reservation.user
   if (reservationUserId?.toString() !== req.user._id.toString()) return res.status(403).json({ message: 'You do not have access to this reservation.' })
+  await syncReservationStatuses({ id: reservation._id })
+  reservation = await Reservation.findById(req.params.id).populate('room').populate('user', 'name email')
   return res.json({ reservation: reservationWithSnapshotFallback(reservation) })
 }
 
 export async function cancelReservation(req, res) {
+  await syncReservationStatuses({ id: req.params.id })
   const reservation = await Reservation.findOne({ _id: req.params.id, user: req.user._id })
   if (!reservation) return res.status(404).json({ message: 'Reservation not found.' })
-  if (reservation.status !== 'confirmed') return res.status(400).json({ message: 'This reservation cannot be cancelled.' })
+  if (!['confirmed', 'upcoming'].includes(reservation.status)) return res.status(400).json({ message: 'This reservation cannot be cancelled.' })
   if (reservation.checkIn <= new Date()) return res.status(400).json({ message: 'Reservations cannot be cancelled after check-in.' })
   reservation.status = 'cancelled'
   reservation.cancelledBy = 'guest'

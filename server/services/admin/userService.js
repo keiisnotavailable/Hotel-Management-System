@@ -209,7 +209,7 @@ export async function deleteAdminUser(id, { cancelReservations = false, actingUs
   await assertNotLastAdmin(user, 'delete')
 
   const now = new Date()
-  const futureFilter = { user: user._id, status: 'confirmed', checkIn: { $gt: now } }
+  const futureFilter = { user: user._id, status: { $in: ['confirmed', 'upcoming'] }, checkIn: { $gt: now } }
   const futureConfirmedReservationCount = await Reservation.countDocuments(futureFilter)
   if (futureConfirmedReservationCount && !cancelReservations) {
     throw new UserServiceError(

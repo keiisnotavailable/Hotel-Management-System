@@ -1,6 +1,7 @@
 import Reservation from '../../models/Reservation.js'
 import Room from '../../models/Room.js'
 import User from '../../models/User.js'
+import { syncReservationStatuses } from '../reservationLifecycleService.js'
 
 const TIME_ZONE = 'Asia/Manila'
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -45,6 +46,7 @@ function rangeStartMonth(now, monthsAgo) {
 }
 
 export async function getAdminStatsData(now = new Date()) {
+  await syncReservationStatuses({ now })
   const firstDay = rangeStartDay(now, 29)
   const firstMonth = rangeStartMonth(now, 5)
   const roomsCollection = Room.collection.name
@@ -73,12 +75,12 @@ export async function getAdminStatsData(now = new Date()) {
         $group: {
           _id: null,
           total: { $sum: 1 },
-          confirmed: { $sum: { $cond: [{ $eq: ['$status', 'confirmed'] }, 1, 0] } },
+          confirmed: { $sum: { $cond: [{ $ne: ['$status', 'cancelled'] }, 1, 0] } },
           cancelled: { $sum: { $cond: [{ $eq: ['$status', 'cancelled'] }, 1, 0] } },
           upcoming: {
             $sum: {
               $cond: [
-                { $and: [{ $eq: ['$status', 'confirmed'] }, { $gt: ['$checkIn', now] }] },
+                { $and: [{ $in: ['$status', ['confirmed', 'upcoming']] }, { $gt: ['$checkIn', now] }] },
                 1,
                 0,
               ],
@@ -89,7 +91,7 @@ export async function getAdminStatsData(now = new Date()) {
               $cond: [
                 {
                   $and: [
-                    { $eq: ['$status', 'confirmed'] },
+                    { $in: ['$status', ['confirmed', 'upcoming', 'ongoing']] },
                     { $lte: ['$checkIn', now] },
                     { $gt: ['$checkOut', now] },
                   ],
@@ -99,13 +101,13 @@ export async function getAdminStatsData(now = new Date()) {
               ],
             },
           },
-          revenue: { $sum: { $cond: [{ $eq: ['$status', 'confirmed'] }, '$totalPrice', 0] } },
+          revenue: { $sum: { $cond: [{ $ne: ['$status', 'cancelled'] }, '$totalPrice', 0] } },
           thisMonth: {
             $sum: {
               $cond: [
                 {
                   $and: [
-                    { $eq: ['$status', 'confirmed'] },
+                    { $ne: ['$status', 'cancelled'] },
                     { $gte: ['$createdAt', manilaMonthStart(now)] },
                     { $lte: ['$createdAt', now] },
                   ],
@@ -132,7 +134,7 @@ export async function getAdminStatsData(now = new Date()) {
     Reservation.aggregate([
       {
         $match: {
-          status: 'confirmed',
+          status: { $in: ['confirmed', 'upcoming', 'ongoing'] },
           checkIn: { $lte: now },
           checkOut: { $gt: now },
         },
@@ -163,7 +165,7 @@ export async function getAdminStatsData(now = new Date()) {
     Reservation.aggregate([
       {
         $match: {
-          status: 'confirmed',
+          status: { $in: ['confirmed', 'upcoming', 'ongoing', 'completed'] },
           createdAt: { $gte: firstMonth, $lte: now },
         },
       },
@@ -176,7 +178,7 @@ export async function getAdminStatsData(now = new Date()) {
       { $sort: { _id: 1 } },
     ]),
     Reservation.aggregate([
-      { $match: { status: 'confirmed' } },
+      { $match: { status: { $ne: 'cancelled' } } },
       {
         $group: {
           _id: '$room',

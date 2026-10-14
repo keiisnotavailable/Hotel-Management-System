@@ -184,7 +184,7 @@ export async function listAdminRooms(query) {
                 upcomingBookingCount: {
                   $sum: {
                     $cond: [
-                      { $and: [{ $eq: ['$status', 'confirmed'] }, { $gt: ['$checkIn', now] }] },
+                      { $and: [{ $in: ['$status', ['confirmed', 'upcoming']] }, { $gt: ['$checkIn', now] }] },
                       1,
                       0,
                     ],
@@ -225,7 +225,7 @@ export async function getAdminRoom(id) {
         upcomingBookingCount: {
           $sum: {
             $cond: [
-              { $and: [{ $eq: ['$status', 'confirmed'] }, { $gt: ['$checkIn', now] }] },
+              { $and: [{ $in: ['$status', ['confirmed', 'upcoming']] }, { $gt: ['$checkIn', now] }] },
               1,
               0,
             ],
@@ -282,7 +282,7 @@ export async function updateAdminRoomStatus(id, status, maintenanceNote) {
   await room.save()
   const futureConfirmedReservationsAffected = await Reservation.countDocuments({
     room: room._id,
-    status: 'confirmed',
+    status: { $in: ['confirmed', 'upcoming'] },
     checkIn: { $gt: new Date() },
   })
   return { room: room.toObject({ versionKey: false }), futureConfirmedReservationsAffected }
@@ -294,7 +294,7 @@ export async function deleteAdminRoom(id) {
   if (!room) throw new RoomServiceError(404, 'Room not found.')
   const futureConfirmedReservations = await Reservation.countDocuments({
     room: room._id,
-    status: 'confirmed',
+    status: { $in: ['confirmed', 'upcoming'] },
     checkIn: { $gt: new Date() },
   })
   if (futureConfirmedReservations) {

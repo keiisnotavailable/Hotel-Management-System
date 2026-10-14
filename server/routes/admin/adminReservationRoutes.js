@@ -2,6 +2,7 @@ import { Router } from 'express'
 import {
   cancelAdminReservation,
   checkAdminReservation,
+  completeAdminReservation,
   getAdminReservation,
   listAdminReservations,
   updateAdminReservation,
@@ -22,5 +23,6 @@ router.get('/:id/availability', asyncHandler(checkAdminReservation))
 router.get('/:id', asyncHandler(getAdminReservation))
 router.patch('/:id/dates', asyncHandler(updateAdminReservation))
 router.patch('/:id/cancel', asyncHandler(cancelAdminReservation))
+router.patch('/:id/complete', asyncHandler(completeAdminReservation))
 
 export default router

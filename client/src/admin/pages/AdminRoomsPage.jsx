@@ -14,7 +14,7 @@ import { getRoomImage } from '../../utils/roomImages'
 
 const PAGE_LIMIT = 20
 const TYPES = ['Crypt', 'Den', 'Suite', 'Tower']
-const RESERVATION_FILTER = (roomId) => `/admin/reservations?${new URLSearchParams({ roomId, status: 'confirmed', upcoming: 'true' })}`
+const RESERVATION_FILTER = (roomId) => `/admin/reservations?${new URLSearchParams({ roomId, status: 'upcoming', upcoming: 'true' })}`
 const money = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', maximumFractionDigits: 0 })
 
 function RoomSkeleton() {
@@ -41,7 +41,7 @@ function MaintenanceModal({ room, busy, onClose, onConfirm }) {
       <p>Guests will no longer see this crypt in listings or availability. Existing reservations will not be cancelled.</p>
       <div className="admin-maintenance-warning" role="note">
         <Wrench size={17} />
-        <span><strong>{upcomingCount} upcoming confirmed {upcomingCount === 1 ? 'reservation remains' : 'reservations remain'} booked.</strong> Review those stays before making changes.</span>
+        <span><strong>{upcomingCount} upcoming {upcomingCount === 1 ? 'reservation remains' : 'reservations remain'} booked.</strong> Review those stays before making changes.</span>
       </div>
       {upcomingCount > 0 && <Link className="admin-reservation-filter-link" to={RESERVATION_FILTER(room._id || room.id)} onClick={onClose}>View this crypt’s upcoming reservations</Link>}
       <label className="admin-confirm-input-label">Maintenance note (optional)
@@ -200,7 +200,7 @@ export default function AdminRoomsPage() {
       setToast({
         type: 'success',
         message: nextStatus === 'maintenance'
-          ? `“${room.name}” is in maintenance. ${data.futureConfirmedReservationsAffected || 0} upcoming reservations remain booked.`
+          ? `“${room.name}” is in maintenance. ${data.futureUpcomingReservationsAffected || 0} upcoming reservations remain booked.`
           : `“${room.name}” is available again.`,
       })
       setMaintenanceRoom(null)

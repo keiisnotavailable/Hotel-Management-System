@@ -40,12 +40,12 @@ function reservationId(reservation) {
 
 function statusLabel(reservation) {
   if (reservation.displayStatus === 'cancelled' || reservation.status === 'cancelled') return 'Cancelled'
-  const labels = { upcoming: 'Upcoming', ongoing: 'Ongoing', completed: 'Completed' }
-  return labels[reservation.displayStatus] || 'Confirmed'
+  const labels = { upcoming: 'Upcoming', completed: 'Completed' }
+  return labels[reservation.displayStatus || reservation.status] || 'Upcoming'
 }
 
 function ReservationStatusBadge({ reservation }) {
-  const status = (reservation.displayStatus || reservation.status || 'confirmed').toLowerCase()
+  const status = (reservation.displayStatus || reservation.status || 'upcoming').toLowerCase()
   return <span className={`admin-status-badge admin-status-${status}`}>{statusLabel(reservation)}</span>
 }
 
@@ -460,7 +460,7 @@ export default function AdminReservationsPage() {
         <input type="search" value={searchInput} placeholder="Search monster, crypt, email or ID…" onChange={(event) => setSearchInput(event.target.value)} />
       </label>
       <label className="admin-reservations-filter"><span>Status</span><SelectControl value={status} onChange={(event) => updateFilters({ status: event.target.value })}>
-        <option value="">All statuses</option><option value="confirmed">Confirmed</option><option value="upcoming">Upcoming</option><option value="ongoing">Ongoing</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option>
+        <option value="">All statuses</option><option value="upcoming">Upcoming</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option>
       </SelectControl></label>
       <label className="admin-reservations-filter"><span>Crypt</span><SelectControl value={roomId} onChange={(event) => updateFilters({ roomId: event.target.value })}>
         <option value="">All crypts</option>{rooms.map((room) => <option key={room._id || room.id} value={room._id || room.id}>{room.name}</option>)}

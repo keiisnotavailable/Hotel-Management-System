@@ -8,6 +8,7 @@ async function migrateReservations() {
 
   let lastId
   let migratedCount = 0
+  const now = new Date()
   while (true) {
     const filter = lastId ? { _id: { $gt: lastId } } : {}
     const reservations = await Reservation.find(filter)
@@ -18,24 +19,26 @@ async function migrateReservations() {
       .lean()
     if (!reservations.length) break
 
-    await Reservation.bulkWrite(reservations.map((reservation) => ({
-      updateOne: {
-        filter: { _id: reservation._id },
-        update: {
-          $set: {
-            roomName: reservation.roomName || reservation.room?.name || 'Unknown room',
-            roomSlug: reservation.roomSlug || reservation.room?.slug || '',
-            userName: reservation.userName || reservation.user?.name || 'Unknown guest',
-            userEmail: reservation.userEmail || reservation.user?.email || '',
-          },
-        },
-      },
-    })))
+    await Reservation.bulkWrite(reservations.map((reservation) => {
+      const completed = reservation.status !== 'cancelled'
+        && (reservation.status === 'completed' || reservation.checkOut <= now)
+      const set = {
+        roomName: reservation.roomName || reservation.room?.name || 'Unknown room',
+        roomSlug: reservation.roomSlug || reservation.room?.slug || '',
+        userName: reservation.userName || reservation.user?.name || 'Unknown guest',
+        userEmail: reservation.userEmail || reservation.user?.email || '',
+        status: reservation.status === 'cancelled' ? 'cancelled' : completed ? 'completed' : 'upcoming',
+      }
+      if (completed) set.completedAt = reservation.completedAt || now
+      const update = { $set: set }
+      if (!completed) update.$unset = { completedAt: 1 }
+      return { updateOne: { filter: { _id: reservation._id }, update } }
+    }))
     lastId = reservations[reservations.length - 1]._id
     migratedCount += reservations.length
   }
 
-  console.log(`Backfilled snapshots for ${migratedCount} reservations.`)
+  console.log(`Backfilled snapshots and statuses for ${migratedCount} reservations.`)
 }
 
 migrateReservations()

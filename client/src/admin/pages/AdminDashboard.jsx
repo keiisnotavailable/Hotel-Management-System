@@ -74,7 +74,7 @@ function ReservationsChart({ data }) {
 
 function RevenueChart({ data }) {
   const maxRevenue = Math.max(0, ...data.map(({ revenue }) => Number(revenue) || 0))
-  if (!maxRevenue) return <EmptyState title="No confirmed revenue yet" description="Confirmed reservation revenue will be charted here." />
+  if (!maxRevenue) return <EmptyState title="No reservation revenue yet" description="Reservation revenue will be charted here." />
   return <div className="admin-revenue-chart" role="img" aria-label="Revenue per month for the last six months">
     {data.map(({ month, revenue }) => {
       const amount = Number(revenue) || 0
@@ -87,16 +87,18 @@ function RevenueChart({ data }) {
   </div>
 }
 
-function ReservationStatusChart({ confirmed, cancelled }) {
-  const total = confirmed + cancelled
+function ReservationStatusChart({ upcoming, completed, cancelled }) {
+  const total = upcoming + completed + cancelled
   if (!total) return <EmptyState title="No reservations yet" description="Reservation status totals will appear here." />
-  const confirmedPercent = (confirmed / total) * 100
+  const upcomingPercent = (upcoming / total) * 100
+  const completedPercent = (completed / total) * 100
   return <div className="admin-status-chart-content">
-    <div className="admin-status-donut" style={{ background: `conic-gradient(#c9a24a 0 ${confirmedPercent}%, #98475b ${confirmedPercent}% 100%)` }} role="img" aria-label={`${confirmed} confirmed and ${cancelled} cancelled reservations`}>
+    <div className="admin-status-donut" style={{ background: `conic-gradient(#91ddb0 0 ${upcomingPercent}%, #c9a24a ${upcomingPercent}% ${upcomingPercent + completedPercent}%, #98475b ${upcomingPercent + completedPercent}% 100%)` }} role="img" aria-label={`${upcoming} upcoming, ${completed} completed, and ${cancelled} cancelled reservations`}>
       <div><strong>{numberFormat.format(total)}</strong><span>Total</span></div>
     </div>
     <ul className="admin-status-legend">
-      <li><span className="admin-legend-dot confirmed" />Confirmed <strong>{numberFormat.format(confirmed)}</strong></li>
+      <li><span className="admin-legend-dot upcoming" />Upcoming <strong>{numberFormat.format(upcoming)}</strong></li>
+      <li><span className="admin-legend-dot completed" />Completed <strong>{numberFormat.format(completed)}</strong></li>
       <li><span className="admin-legend-dot cancelled" />Cancelled <strong>{numberFormat.format(cancelled)}</strong></li>
     </ul>
   </div>
@@ -205,12 +207,12 @@ export default function AdminDashboard() {
           <RevenueChart data={stats.revenuePerMonth || []} />
         </ChartPanel>
         <ChartPanel title="Reservations by status">
-          <ReservationStatusChart confirmed={reservations.confirmed || 0} cancelled={reservations.cancelled || 0} />
+          <ReservationStatusChart upcoming={reservations.upcoming || 0} completed={reservations.completed || 0} cancelled={reservations.cancelled || 0} />
         </ChartPanel>
       </div>
 
       <div className="admin-dashboard-lists">
-        <ChartPanel title="Top crypts" subtitle="Most confirmed reservations">
+        <ChartPanel title="Top crypts" subtitle="Most reservations">
           {stats.topRooms?.length
             ? <ol className="admin-top-rooms">{stats.topRooms.map((room, index) => <li key={room.roomId || room.name}>
               <span className="admin-top-room-rank">{String(index + 1).padStart(2, '0')}</span>
@@ -218,7 +220,7 @@ export default function AdminDashboard() {
               <span className="admin-top-room-bookings">{numberFormat.format(room.bookings)} bookings</span>
               <strong>{money(room.revenue)}</strong>
             </li>)}</ol>
-            : <EmptyState title="No top crypts yet" description="Confirmed stays will rank your most popular crypts here." />}
+            : <EmptyState title="No top crypts yet" description="Reservations will rank your most popular crypts here." />}
         </ChartPanel>
 
         <ChartPanel title="Recent reservations">

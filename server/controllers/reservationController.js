@@ -71,7 +71,7 @@ export async function cancelReservation(req, res) {
   await syncReservationStatuses({ id: req.params.id })
   const reservation = await Reservation.findOne({ _id: req.params.id, user: req.user._id })
   if (!reservation) return res.status(404).json({ message: 'Reservation not found.' })
-  if (!['confirmed', 'upcoming'].includes(reservation.status)) return res.status(400).json({ message: 'This reservation cannot be cancelled.' })
+  if (reservation.status !== 'upcoming') return res.status(400).json({ message: 'This reservation cannot be cancelled.' })
   if (reservation.checkIn <= new Date()) return res.status(400).json({ message: 'Reservations cannot be cancelled after check-in.' })
   reservation.status = 'cancelled'
   reservation.cancelledBy = 'guest'

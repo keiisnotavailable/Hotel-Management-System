@@ -6,7 +6,7 @@ import { MIN_STAY_HOURS } from '../../config/defaults.js'
 import { calculatePrice, checkAvailability } from '../reservationService.js'
 import { syncReservationStatuses } from '../reservationLifecycleService.js'
 
-const STATUSES = ['confirmed', 'upcoming', 'ongoing', 'completed', 'cancelled']
+const STATUSES = ['upcoming', 'completed', 'cancelled']
 const SORTS = {
   '-createdAt': { createdAt: -1 },
   createdAt: { createdAt: 1 },
@@ -76,10 +76,8 @@ async function buildFilter(query, now) {
   const status = String(query.status || '')
   if (status && !STATUSES.includes(status)) throw new AdminReservationError(400, 'Invalid reservation status.')
 
-  if (status === 'confirmed' && query.upcoming === 'true') {
-    clauses.push({ status: { $in: ['confirmed', 'upcoming'] } }, { checkIn: { $gt: now } })
-  } else if (status) clauses.push({ status })
-  else if (query.upcoming === 'true') clauses.push({ status: { $in: ['confirmed', 'upcoming'] } }, { checkIn: { $gt: now } })
+  if (status) clauses.push({ status })
+  if (query.upcoming === 'true') clauses.push({ status: 'upcoming' }, { checkIn: { $gt: now } })
 
   if (query.roomId) {
     if (!mongoose.isValidObjectId(query.roomId)) throw new AdminReservationError(400, 'A supplied room identifier is invalid.')
@@ -187,7 +185,7 @@ function parseDates(checkIn, checkOut) {
 }
 
 function assertEditable(reservation) {
-  if (!['confirmed', 'upcoming', 'ongoing'].includes(reservation.status)) {
+  if (reservation.status !== 'upcoming') {
     throw new AdminReservationError(400, 'Completed or cancelled reservations cannot be changed.')
   }
 }
@@ -234,9 +232,6 @@ export async function updateAdminReservationDates(id, input) {
   if (end <= now) {
     reservation.status = 'completed'
     reservation.completedAt = now
-  } else if (start <= now) {
-    reservation.status = 'ongoing'
-    reservation.completedAt = undefined
   } else {
     reservation.status = 'upcoming'
     reservation.completedAt = undefined
@@ -263,6 +258,7 @@ export async function completeAdminReservation(id) {
   const reservation = await findReservation(id)
   if (reservation.status === 'cancelled') throw new AdminReservationError(400, 'Cancelled reservations cannot be completed.')
   if (reservation.status === 'completed') throw new AdminReservationError(400, 'This reservation is already completed.')
+  if (reservation.status !== 'upcoming') throw new AdminReservationError(400, 'Only upcoming reservations can be completed.')
   reservation.status = 'completed'
   reservation.completedAt = new Date()
   await reservation.save()

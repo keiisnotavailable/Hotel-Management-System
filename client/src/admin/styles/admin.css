@@ -39,7 +39,7 @@
 .admin-data-table th { color: var(--admin-gold); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; }
 .admin-data-table tr:last-child td { border-bottom: 0; }
 .admin-status-badge { display: inline-flex; align-items: center; border: 1px solid rgba(243,235,221,.2); border-radius: 999px; padding: 4px 9px; color: rgba(243,235,221,.76); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
-.admin-status-available,.admin-status-confirmed,.admin-status-active { border-color: rgba(104,196,142,.4); color: #91ddb0; }
+.admin-status-available,.admin-status-active { border-color: rgba(104,196,142,.4); color: #91ddb0; }
 .admin-status-maintenance,.admin-status-cancelled,.admin-status-blocked { border-color: rgba(235,124,124,.42); color: #ef9999; }
 .admin-empty-state { border: 1px dashed rgba(201,162,74,.3); padding: 38px 20px; text-align: center; }
 .admin-empty-state > span { color: var(--admin-gold); font-size: 28px; }
@@ -129,7 +129,8 @@
 .admin-status-legend li { display: grid; grid-template-columns: 9px 1fr auto; align-items: center; gap: 8px; }
 .admin-status-legend strong { color: var(--admin-cream); }
 .admin-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
-.admin-legend-dot.confirmed { background: #c9a24a; }
+.admin-legend-dot.upcoming { background: #91ddb0; }
+.admin-legend-dot.completed { background: #c9a24a; }
 .admin-legend-dot.cancelled { background: #98475b; }
 .admin-dashboard-lists { display: grid; grid-template-columns: minmax(0,.8fr) minmax(0,1.4fr); align-items: start; gap: 14px; }
 .admin-top-rooms { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
@@ -285,7 +286,6 @@
 .admin-reservation-actions button.danger { color: #e99a9a; }
 .admin-reservation-actions button:disabled { cursor: not-allowed; opacity: .28; }
 .admin-status-upcoming { border-color: rgba(104,196,142,.4); color: #91ddb0; }
-.admin-status-ongoing { border-color: rgba(220,169,74,.42); color: #e5bd68; }
 .admin-status-completed { border-color: rgba(243,235,221,.2); color: rgba(243,235,221,.55); }
 .admin-reservation-modal { max-height: min(90vh,700px); overflow-y: auto; }
 .admin-reservation-modal-subtitle { margin: 6px 0 18px; color: rgba(243,235,221,.58); font-size: 11px; }

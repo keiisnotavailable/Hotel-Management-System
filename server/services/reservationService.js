@@ -1,4 +1,5 @@
 import Reservation from '../models/Reservation.js'
+import { syncReservationStatuses } from './reservationLifecycleService.js'
 import { CLEANING_BUFFER_MINUTES, DEFAULT_CHECKIN_TIME, DEFAULT_CHECKOUT_TIME, MIN_STAY_HOURS } from '../config/defaults.js'
 
 function normalizeDate(value, time) {
@@ -50,10 +51,11 @@ export function validateReservationInput({
 }
 
 export async function checkAvailability({ roomId, checkIn, checkOut, excludeReservationId }) {
+  await syncReservationStatuses()
   const bufferedStart = new Date(checkIn.getTime() - CLEANING_BUFFER_MINUTES * 60000)
   const bufferedEnd = new Date(checkOut.getTime() + CLEANING_BUFFER_MINUTES * 60000)
   const filter = {
-    status: { $in: ['confirmed', 'upcoming', 'ongoing'] },
+    status: 'upcoming',
     checkIn: { $lt: bufferedEnd },
     checkOut: { $gt: bufferedStart },
   }

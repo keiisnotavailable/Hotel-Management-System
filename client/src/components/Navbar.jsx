@@ -82,10 +82,13 @@ export default function Navbar({ onAuth }) {
         menuClassName="navbar-menu account-menu"
         trigger={<button className="account-button" type="button"><AccountAvatar user={user} imageUrl={profilePhoto} /><span>{user.name}</span></button>}
       >
-        <Link role="menuitem" to="/profile" onClick={closeMenus}>Profile</Link>
-        <Link role="menuitem" to="/my-reservations" onClick={closeMenus}>My Reservations</Link>
-        <Link role="menuitem" to="/saved-crypts" onClick={closeMenus}>Saved Crypts</Link>
-        {isAdmin && <Link role="menuitem" to="/admin" onClick={closeMenus}>Admin</Link>}
+        {isAdmin
+          ? <Link role="menuitem" to="/admin" onClick={closeMenus}>Admin dashboard</Link>
+          : <>
+            <Link role="menuitem" to="/profile" onClick={closeMenus}>Profile</Link>
+            <Link role="menuitem" to="/my-reservations" onClick={closeMenus}>My Reservations</Link>
+            <Link role="menuitem" to="/saved-crypts" onClick={closeMenus}>Saved Crypts</Link>
+          </>}
         <button role="menuitem" type="button" onClick={logout}>Sign Out</button>
       </DropdownMenu></div> : <button className="account-button" type="button" onClick={openAuth}>Sign in / Sign up</button>}
       <button className="navbar-toggle" type="button" onClick={() => setMobileOpen(!mobileOpen)} aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={mobileOpen} aria-controls="navbar-mobile-panel">{mobileOpen ? <X size={20} /> : <Menu size={20} />}</button>
@@ -95,7 +98,10 @@ export default function Navbar({ onAuth }) {
       <NavLink to="/about" label="About" active={isActive('/about')} onClick={closeMenus} />
       <NavLink to="/crypts" label="Rooms" active={isActive('/crypts')} onClick={closeMenus} />
       <NavLink to="/contact" label="Contact" active={isActive('/contact')} onClick={closeMenus} />
-      {user ? <><NavLink to="/profile" label="Profile" active={isActive('/profile')} onClick={closeMenus} /><NavLink to="/my-reservations" label="My Reservations" active={isActive('/my-reservations')} onClick={closeMenus} /><NavLink to="/saved-crypts" label="Saved Crypts" active={isActive('/saved-crypts')} onClick={closeMenus} />{isAdmin && <NavLink to="/admin" label="Admin" active={isActive('/admin')} onClick={closeMenus} />}<button className="account-button mobile-account-button" type="button" onClick={logout}>Sign Out</button></> : <button className="account-button mobile-account-button" type="button" onClick={openAuth}>Sign in / Sign up</button>}
+      {user ? <>{isAdmin
+        ? <NavLink to="/admin" label="Admin dashboard" active={isActive('/admin')} onClick={closeMenus} />
+        : <><NavLink to="/profile" label="Profile" active={isActive('/profile')} onClick={closeMenus} /><NavLink to="/my-reservations" label="My Reservations" active={isActive('/my-reservations')} onClick={closeMenus} /><NavLink to="/saved-crypts" label="Saved Crypts" active={isActive('/saved-crypts')} onClick={closeMenus} /></>}
+        <button className="account-button mobile-account-button" type="button" onClick={logout}>Sign Out</button></> : <button className="account-button mobile-account-button" type="button" onClick={openAuth}>Sign in / Sign up</button>}
     </div>}
   </nav>
 }

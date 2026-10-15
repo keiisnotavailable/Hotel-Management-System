@@ -6,6 +6,7 @@ import mongoose from 'mongoose'
 import Reservation from '../../models/Reservation.js'
 import Room from '../../models/Room.js'
 import User from '../../models/User.js'
+import { syncReservationStatuses } from '../reservationLifecycleService.js'
 
 const ROOM_TYPES = ['Crypt', 'Den', 'Suite', 'Tower']
 const ROOM_STATUSES = ['available', 'maintenance']
@@ -184,7 +185,7 @@ export async function listAdminRooms(query) {
                 upcomingBookingCount: {
                   $sum: {
                     $cond: [
-                      { $and: [{ $in: ['$status', ['confirmed', 'upcoming']] }, { $gt: ['$checkIn', now] }] },
+                      { $and: [{ $eq: ['$status', 'upcoming'] }, { $gt: ['$checkIn', now] }] },
                       1,
                       0,
                     ],
@@ -225,7 +226,7 @@ export async function getAdminRoom(id) {
         upcomingBookingCount: {
           $sum: {
             $cond: [
-              { $and: [{ $in: ['$status', ['confirmed', 'upcoming']] }, { $gt: ['$checkIn', now] }] },
+              { $and: [{ $eq: ['$status', 'upcoming'] }, { $gt: ['$checkIn', now] }] },
               1,
               0,
             ],
@@ -276,30 +277,32 @@ export async function updateAdminRoomStatus(id, status, maintenanceNote) {
   }
   const room = await Room.findById(id)
   if (!room) throw new RoomServiceError(404, 'Room not found.')
+  await syncReservationStatuses()
   room.status = status
   if (maintenanceNote !== undefined) room.maintenanceNote = maintenanceNote
   room.statusUpdatedAt = new Date()
   await room.save()
-  const futureConfirmedReservationsAffected = await Reservation.countDocuments({
+  const futureUpcomingReservationsAffected = await Reservation.countDocuments({
     room: room._id,
-    status: { $in: ['confirmed', 'upcoming'] },
+    status: 'upcoming',
     checkIn: { $gt: new Date() },
   })
-  return { room: room.toObject({ versionKey: false }), futureConfirmedReservationsAffected }
+  return { room: room.toObject({ versionKey: false }), futureUpcomingReservationsAffected }
 }
 
 export async function deleteAdminRoom(id) {
   if (!mongoose.isValidObjectId(id)) throw new RoomServiceError(400, 'A supplied room identifier is invalid.')
   const room = await Room.findById(id)
   if (!room) throw new RoomServiceError(404, 'Room not found.')
-  const futureConfirmedReservations = await Reservation.countDocuments({
+  await syncReservationStatuses()
+  const futureUpcomingReservations = await Reservation.countDocuments({
     room: room._id,
-    status: { $in: ['confirmed', 'upcoming'] },
+    status: 'upcoming',
     checkIn: { $gt: new Date() },
   })
-  if (futureConfirmedReservations) {
-    throw new RoomServiceError(409, `Room has ${futureConfirmedReservations} future confirmed reservation(s).`, {
-      count: futureConfirmedReservations,
+  if (futureUpcomingReservations) {
+    throw new RoomServiceError(409, `Room has ${futureUpcomingReservations} future upcoming reservation(s).`, {
+      count: futureUpcomingReservations,
     })
   }
   await User.updateMany({ savedRooms: room._id }, { $pull: { savedRooms: room._id } })

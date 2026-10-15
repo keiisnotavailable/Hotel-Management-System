@@ -33,7 +33,7 @@ export default function AdminLayout() {
 
   function logout() {
     signOut()
-    navigate('/signin', { replace: true })
+    navigate('/', { replace: true })
   }
 
   return <div className="admin-shell">

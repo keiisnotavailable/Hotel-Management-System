@@ -366,7 +366,7 @@ export default function AdminUsersPage() {
       <section className="admin-confirm-modal admin-user-delete-conflict" role="alertdialog" aria-modal="true" aria-labelledby="user-delete-conflict-title">
         <p className="admin-kicker">Upcoming stays</p>
         <h2 id="user-delete-conflict-title">This monster has future reservations</h2>
-        <p>{deleteConflict.count} future confirmed {deleteConflict.count === 1 ? 'reservation is' : 'reservations are'} booked under {deleteConflict.action.user.name}.</p>
+        <p>{deleteConflict.count} future upcoming {deleteConflict.count === 1 ? 'reservation is' : 'reservations are'} booked under {deleteConflict.action.user.name}.</p>
         <p>You can cancel those reservations and delete the account. Past reservations will remain in the records.</p>
         <div className="admin-modal-actions">
           <button type="button" disabled={isBusy} onClick={() => setDeleteConflict(null)}>Keep account</button>

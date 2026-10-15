@@ -43,12 +43,14 @@ export default function AuthModal({ initialMode = 'signin', from, onClose }) {
         signIn(data.user, data.token)
         onClose()
         const returnTo = from || location.state?.from
+        const requestedPath = typeof returnTo === 'string' ? returnTo : returnTo?.pathname
         const destination = typeof returnTo === 'string'
           ? returnTo
           : returnTo
             ? { pathname: returnTo.pathname, search: returnTo.search, hash: returnTo.hash }
             : '/'
-        navigate(data.user.role === 'admin' ? '/admin' : destination, { replace: true })
+        const guestDestination = requestedPath?.startsWith('/admin') ? '/' : destination
+        navigate(data.user.role === 'admin' ? '/admin' : guestDestination, { replace: true })
       }
     } catch (requestError) { setError(getErrorMessage(requestError, 'The castle could not complete your request.')) } finally { setSubmitting(false) }
   }

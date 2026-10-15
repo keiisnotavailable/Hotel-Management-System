@@ -75,23 +75,15 @@ export async function getAdminStatsData(now = new Date()) {
         $group: {
           _id: null,
           total: { $sum: 1 },
-          confirmed: { $sum: { $cond: [{ $ne: ['$status', 'cancelled'] }, 1, 0] } },
+          upcoming: { $sum: { $cond: [{ $eq: ['$status', 'upcoming'] }, 1, 0] } },
           cancelled: { $sum: { $cond: [{ $eq: ['$status', 'cancelled'] }, 1, 0] } },
-          upcoming: {
-            $sum: {
-              $cond: [
-                { $and: [{ $in: ['$status', ['confirmed', 'upcoming']] }, { $gt: ['$checkIn', now] }] },
-                1,
-                0,
-              ],
-            },
-          },
+          completed: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } },
           activeNow: {
             $sum: {
               $cond: [
                 {
                   $and: [
-                    { $in: ['$status', ['confirmed', 'upcoming', 'ongoing']] },
+                    { $eq: ['$status', 'upcoming'] },
                     { $lte: ['$checkIn', now] },
                     { $gt: ['$checkOut', now] },
                   ],
@@ -134,7 +126,7 @@ export async function getAdminStatsData(now = new Date()) {
     Reservation.aggregate([
       {
         $match: {
-          status: { $in: ['confirmed', 'upcoming', 'ongoing'] },
+          status: 'upcoming',
           checkIn: { $lte: now },
           checkOut: { $gt: now },
         },
@@ -165,7 +157,7 @@ export async function getAdminStatsData(now = new Date()) {
     Reservation.aggregate([
       {
         $match: {
-          status: { $in: ['confirmed', 'upcoming', 'ongoing', 'completed'] },
+          status: { $in: ['upcoming', 'completed'] },
           createdAt: { $gte: firstMonth, $lte: now },
         },
       },
@@ -279,7 +271,7 @@ export async function getAdminStatsData(now = new Date()) {
     },
     reservations: {
       total: reservationCounts.total || 0,
-      confirmed: reservationCounts.confirmed || 0,
+      completed: reservationCounts.completed || 0,
       cancelled: reservationCounts.cancelled || 0,
       upcoming: reservationCounts.upcoming || 0,
       activeNow: reservationCounts.activeNow || 0,

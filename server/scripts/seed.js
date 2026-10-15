@@ -20,8 +20,8 @@ const rooms = [
 ].map((room) => ({ ...room, status: 'available' }))
 
 const sampleReservations = [
-  { slug: 'werewolf-pups-family-den', checkIn: '2027-01-18T18:00:00.000Z', checkOut: '2027-01-21T06:00:00.000Z', guests: 2, status: 'confirmed', specialRequests: 'Late-night complimentary cocoa.' },
-  { slug: 'royal-coffin-penthouse', checkIn: '2027-02-10T18:00:00.000Z', checkOut: '2027-02-13T06:00:00.000Z', guests: 2, status: 'confirmed', specialRequests: 'Please prepare the royal terrace.' },
+  { slug: 'werewolf-pups-family-den', checkIn: '2027-01-18T18:00:00.000Z', checkOut: '2027-01-21T06:00:00.000Z', guests: 2, status: 'upcoming', specialRequests: 'Late-night complimentary cocoa.' },
+  { slug: 'royal-coffin-penthouse', checkIn: '2027-02-10T18:00:00.000Z', checkOut: '2027-02-13T06:00:00.000Z', guests: 2, status: 'upcoming', specialRequests: 'Please prepare the royal terrace.' },
   { slug: 'the-haunted-tower-crypt', checkIn: '2027-03-05T18:00:00.000Z', checkOut: '2027-03-08T06:00:00.000Z', guests: 2, status: 'cancelled', specialRequests: 'Window seat requested.' },
 ]
 

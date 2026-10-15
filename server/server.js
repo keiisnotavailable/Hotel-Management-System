@@ -19,6 +19,19 @@ if (!process.env.JWT_SECRET) {
   throw new Error('JWT_SECRET is not configured')
 }
 
+// Connect once and reuse the connection (important on Vercel serverless)
+let dbReady = null
+
+function ensureDatabase() {
+  if (!dbReady) {
+    dbReady = connectDatabase().catch((error) => {
+      dbReady = null
+      throw error
+    })
+  }
+  return dbReady
+}
+
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }))
 app.use(express.json({ limit: '10kb' }))
 app.use('/uploads', express.static(fileURLToPath(new URL('./uploads/', import.meta.url))))
@@ -26,6 +39,18 @@ app.use('/uploads', express.static(fileURLToPath(new URL('./uploads/', import.me
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', service: 'hotel-transylvania-server' })
 })
+
+// Make sure the database is connected before any API route runs
+app.use('/api', async (_req, res, next) => {
+  try {
+    await ensureDatabase()
+    next()
+  } catch (error) {
+    console.error(`Database connection failed: ${error.message}`)
+    res.status(503).json({ message: 'Database unavailable' })
+  }
+})
+
 app.use('/api/auth', authRoutes)
 app.use('/api/rooms', roomRoutes)
 app.use('/api/reservations', reservationRoutes)
@@ -48,14 +73,17 @@ app.use((error, _req, res, _next) => {
   res.status(500).json({ message: 'The castle encountered an unexpected error.' })
 })
 
-connectDatabase()
-  .then(() => {
-    Room.countDocuments({ status: 'available' }).then((roomCount) => {
+export default app
+
+if (!process.env.VERCEL) {
+  ensureDatabase()
+    .then(async () => {
+      const roomCount = await Room.countDocuments({ status: 'available' })
       console.log(`Database "${mongoose.connection.name}" has ${roomCount} available rooms`)
       app.listen(port, () => console.log(`Server listening on http://localhost:${port}`))
     })
-  })
-  .catch((error) => {
-    console.error(`Unable to start server: ${error.message}`)
-    process.exit(1)
-  })
+    .catch((error) => {
+      console.error(`Unable to start server: ${error.message}`)
+      process.exit(1)
+    })
+}

@@ -2,6 +2,7 @@ import mongoose from 'mongoose'
 import Reservation from '../../models/Reservation.js'
 import Room from '../../models/Room.js'
 import User from '../../models/User.js'
+import { syncReservationStatuses } from '../reservationLifecycleService.js'
 
 export class UserServiceError extends Error {
   constructor(status, message, details = {}) {
@@ -107,6 +108,7 @@ export async function listAdminUsers(query) {
 
 export async function getAdminUser(id) {
   const user = await requireUser(id)
+  await syncReservationStatuses()
   const reservations = await Reservation.aggregate([
     { $match: { user: user._id } },
     { $sort: { checkIn: -1 } },
@@ -208,17 +210,18 @@ export async function deleteAdminUser(id, { cancelReservations = false, actingUs
   if (user._id.toString() === actingUserId.toString()) throw new UserServiceError(400, 'You cannot delete your own admin account.')
   await assertNotLastAdmin(user, 'delete')
 
+  await syncReservationStatuses()
   const now = new Date()
-  const futureFilter = { user: user._id, status: { $in: ['confirmed', 'upcoming'] }, checkIn: { $gt: now } }
-  const futureConfirmedReservationCount = await Reservation.countDocuments(futureFilter)
-  if (futureConfirmedReservationCount && !cancelReservations) {
+  const futureFilter = { user: user._id, status: 'upcoming', checkIn: { $gt: now } }
+  const futureUpcomingReservationCount = await Reservation.countDocuments(futureFilter)
+  if (futureUpcomingReservationCount && !cancelReservations) {
     throw new UserServiceError(
       409,
-      `User has ${futureConfirmedReservationCount} future confirmed reservation(s).`,
-      { count: futureConfirmedReservationCount },
+      `User has ${futureUpcomingReservationCount} future upcoming reservation(s).`,
+      { count: futureUpcomingReservationCount },
     )
   }
-  if (futureConfirmedReservationCount) {
+  if (futureUpcomingReservationCount) {
     await Reservation.updateMany(futureFilter, {
       $set: {
         status: 'cancelled',
@@ -231,5 +234,5 @@ export async function deleteAdminUser(id, { cancelReservations = false, actingUs
   user.savedRooms = []
   await user.save()
   await user.deleteOne()
-  return { deleted: true, cancelledReservations: futureConfirmedReservationCount }
+  return { deleted: true, cancelledReservations: futureUpcomingReservationCount }
 }

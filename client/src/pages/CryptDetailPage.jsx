@@ -35,6 +35,11 @@ export default function CryptDetailPage({ onAuth }) {
   const [activeImage, setActiveImage] = useState(0)
   const [lightbox, setLightbox] = useState(false)
   const [specialRequests, setSpecialRequests] = useState('')
+  const [reviewResult, setReviewResult] = useState(null)
+  const [reviewPage, setReviewPage] = useState(1)
+  const [reviewSort, setReviewSort] = useState('newest')
+  const [reviewsLoading, setReviewsLoading] = useState(false)
+  const [reviewsError, setReviewsError] = useState('')
   const isMaintenance = room?.status === 'maintenance'
 
   useEffect(() => {
@@ -44,6 +49,18 @@ export default function CryptDetailPage({ onAuth }) {
       .catch((requestError) => setError(getErrorMessage(requestError, 'Crypt not found.')))
       .finally(() => setLoading(false))
   }, [id])
+
+  useEffect(() => {
+    if (!room?._id) return
+    let active = true
+    setReviewsLoading(true)
+    setReviewsError('')
+    axios.get(`${API_BASE}/rooms/${room._id}/reviews`, { params: { page: reviewPage, limit: 5, sort: reviewSort } })
+      .then(({ data }) => { if (active) setReviewResult(data) })
+      .catch((requestError) => { if (active) setReviewsError(getErrorMessage(requestError, 'Reviews could not be loaded.')) })
+      .finally(() => { if (active) setReviewsLoading(false) })
+    return () => { active = false }
+  }, [room?._id, reviewPage, reviewSort])
 
   useEffect(() => {
     if (!room) return
@@ -87,6 +104,7 @@ export default function CryptDetailPage({ onAuth }) {
   const images = useMemo(() => getRoomImages(room), [room])
   const nights = validation ? 0 : Math.max(1, Math.ceil((new Date(booking.checkOut) - new Date(booking.checkIn)) / 86400000))
   const totalPrice = nights * (room?.pricePerNight || 0)
+  const reviewSummary = reviewResult?.summary || { average: 0, count: 0, distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } }
 
   async function toggleSaved() {
     if (!user) { onAuth('/signin', location.pathname + location.search); return }
@@ -132,7 +150,7 @@ export default function CryptDetailPage({ onAuth }) {
           {images.length > 1 && <div className="mt-3 grid grid-cols-4 gap-2">{images.map((image, index) => <button type="button" key={image} className={`gallery-thumb ${index === activeImage ? 'active' : ''}`} onClick={() => setActiveImage(index)}><img src={image} alt={`${room.name} view ${index + 1}`} /></button>)}</div>}
         </section>
         <section className="room-detail-info">
-          <div className="flex items-start justify-between gap-4"><div><p className="detail-eyebrow">{room.category || room.type}</p><h1 className="mt-2 font-display text-4xl uppercase leading-none text-ink sm:text-5xl">{room.name}</h1><div className="mt-4 flex items-center gap-2 text-gold"><span className="flex">{[1, 2, 3, 4, 5].map((star) => <Star key={star} size={15} fill={star <= room.rating ? 'currentColor' : 'none'} />)}</span><span className="text-sm text-ink/65">{Number(room.rating || 0).toFixed(1)}</span></div></div><button type="button" aria-label={saved ? 'Remove from saved crypts' : 'Save crypt'} className="save-room-button" onClick={toggleSaved}><Heart size={20} fill={saved ? 'currentColor' : 'none'} /></button></div>
+          <div className="flex items-start justify-between gap-4"><div><p className="detail-eyebrow">{room.category || room.type}</p><h1 className="mt-2 font-display text-4xl uppercase leading-none text-ink sm:text-5xl">{room.name}</h1><div className="mt-4 flex items-center gap-2 text-gold"><span className="flex">{[1, 2, 3, 4, 5].map((star) => <Star key={star} size={15} fill={star <= (reviewSummary.count ? reviewSummary.average : room.rating) ? 'currentColor' : 'none'} />)}</span><span className="text-sm text-ink/65">{Number(reviewSummary.count ? reviewSummary.average : room.rating || 0).toFixed(1)}{reviewSummary.count ? ` · ${reviewSummary.count} review${reviewSummary.count === 1 ? '' : 's'}` : ''}</span></div></div><button type="button" aria-label={saved ? 'Remove from saved crypts' : 'Save crypt'} className="save-room-button" onClick={toggleSaved}><Heart size={20} fill={saved ? 'currentColor' : 'none'} /></button></div>
           <p className="mt-5 text-sm font-semibold uppercase tracking-widest text-crimson">{room.sizeSqFt} SQ FT / {room.tagline}</p><p className="mt-5 text-sm leading-7 text-ink/70">{room.description}</p>
           <div className="detail-facts mt-7">{[[<BedDouble />, `${formatPHP(room.pricePerNight)} / night`], [<Users />, `Up to ${room.capacity} monsters`], [<BedDouble />, room.bedsLabel], [<Maximize2 />, `${room.sizeSqFt} sq ft`]].map(([icon, text]) => <div key={text}>{icon}<span>{text}</span></div>)}</div>
           <h2 className="mt-8 font-display text-2xl uppercase">Amenities</h2><div className="amenity-grid mt-4">{room.amenities.map((amenity) => <span key={amenity}><Sparkles size={14} />{amenity}</span>)}</div>
@@ -145,6 +163,33 @@ export default function CryptDetailPage({ onAuth }) {
         {validation && <p className="booking-error mt-3" aria-live="polite">{validation}</p>}
         <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_0.8fr]"><div aria-live="polite" className="text-sm">{checking ? <p className="text-gold">Checking the shadows...</p> : availability?.available ? <p className="text-emerald-300">Available for these hours.</p> : availability?.conflicts?.length ? <div className="text-red-300"><p>Not available for those hours.</p>{availability.conflicts.map((conflict) => <p key={conflict._id}>{formatConflict(conflict)}</p>)}</div> : null}<label className="mt-4 block text-xs uppercase tracking-widest text-parchment/60">Special requests (optional)<textarea className="mt-2 min-h-20 w-full border border-parchment/20 bg-[#0f0b14] p-3 text-sm text-parchment outline-none focus:border-gold" value={specialRequests} onChange={(event) => setSpecialRequests(event.target.value)} placeholder="Tell the keepers anything useful." /></label></div><div className="price-summary" aria-live="polite"><p><span>Dusk</span><strong>{booking.checkIn ? formatDateTime(booking.checkIn) : 'Choose a time'}</strong></p><p><span>Dawn</span><strong>{booking.checkOut ? formatDateTime(booking.checkOut) : 'Choose a time'}</strong></p><p><span>Stay</span><strong>{nights ? `${formatPHP(room.pricePerNight)} x ${nights} night${nights === 1 ? '' : 's'}` : 'Dates required'}</strong></p><p className="price-total"><span>Total</span><strong>{formatPHP(totalPrice)}</strong></p><button type="button" className="booking-submit mt-4 w-full" onClick={reserve} disabled={isMaintenance || submitting || Boolean(validation) || checking || availability?.available === false}>{submitting ? 'Reserving...' : user ? 'Reserve' : 'Sign in to reserve'} <ArrowRight size={16} /></button></div></div>
       </fieldset>
+      <section className="room-reviews-section" aria-labelledby="room-reviews-heading">
+        <div className="room-reviews-heading">
+          <div><p className="detail-eyebrow">Guest experiences</p><h2 id="room-reviews-heading">Reviews</h2></div>
+          <label>Sort reviews
+            <select value={reviewSort} onChange={(event) => { setReviewSort(event.target.value); setReviewPage(1) }}>
+              <option value="newest">Newest</option><option value="highest">Highest rated</option><option value="lowest">Lowest rated</option>
+            </select>
+          </label>
+        </div>
+        {reviewSummary.count > 0 && <div className="room-review-summary">
+          <div className="room-review-average"><strong>{reviewSummary.average.toFixed(1)}</strong><span className="review-stars-static" aria-label={`${reviewSummary.average} out of 5 stars`}>{[1, 2, 3, 4, 5].map((star) => <Star key={star} size={17} fill={star <= Math.round(reviewSummary.average) ? 'currentColor' : 'none'} />)}</span><span>{reviewSummary.count} review{reviewSummary.count === 1 ? '' : 's'}</span></div>
+          <div className="room-review-distribution" aria-label="Rating distribution">
+            {[5, 4, 3, 2, 1].map((rating) => <div key={rating}><span>{rating} star</span><span className="review-distribution-track"><span style={{ width: `${reviewSummary.count ? reviewSummary.distribution[rating] / reviewSummary.count * 100 : 0}%` }} /></span><span>{reviewSummary.distribution[rating]}</span></div>)}
+          </div>
+        </div>}
+        {reviewsError && <p className="room-reviews-error" role="alert">{reviewsError}</p>}
+        {reviewsLoading && <p className="room-reviews-message" aria-live="polite">Loading reviews…</p>}
+        {!reviewsLoading && !reviewsError && !reviewSummary.count && <p className="room-reviews-message">No reviews yet. Be the first monster to share a stay.</p>}
+        {!reviewsLoading && reviewResult?.items?.map((review) => <article className="room-review-card" key={review.reviewId}>
+          <div className="room-review-card-heading"><div><strong>{review.displayName}</strong><span>Stayed {new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' }).format(new Date(review.stayCheckIn))}</span></div><div><span className="review-stars-static" aria-label={`${review.overall} out of 5 stars`}>{[1, 2, 3, 4, 5].map((star) => <Star key={star} size={15} fill={star <= review.overall ? 'currentColor' : 'none'} />)}</span><time>{formatDateTime(review.createdAt)}</time></div></div>
+          {review.comment && <p>{review.comment}</p>}
+          {review.edited && <small>Edited {formatDateTime(review.updatedAt)}</small>}
+        </article>)}
+        {reviewResult?.totalPages > 1 && <nav className="room-reviews-pagination" aria-label="Review pages">
+          <button type="button" disabled={reviewPage <= 1} onClick={() => setReviewPage((page) => page - 1)}>Previous</button><span>Page {reviewPage} of {reviewResult.totalPages}</span><button type="button" disabled={reviewPage >= reviewResult.totalPages} onClick={() => setReviewPage((page) => page + 1)}>Next</button>
+        </nav>}
+      </section>
       {error && <Toast error={error} />}<Toast message={message} />
     </div>
     {lightbox && images[activeImage] && <div className="lightbox" role="dialog" aria-modal="true" aria-label={`${room.name} gallery`} onClick={() => setLightbox(false)}><button type="button" aria-label="Close gallery" onClick={() => setLightbox(false)}><X /></button><img src={images[activeImage]} alt={`${room.name} interior`} onClick={(event) => event.stopPropagation()} /></div>}

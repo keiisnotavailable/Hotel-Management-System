@@ -9,6 +9,8 @@ const roomSchema = new mongoose.Schema({
   sizeSqFt: { type: Number, min: 0 },
   bedsLabel: { type: String, trim: true, default: '' },
   rating: { type: Number, min: 0, max: 5, default: 0 },
+  reviewAverage: { type: Number, min: 0, max: 5, default: 0 },
+  reviewCount: { type: Number, min: 0, default: 0 },
   featured: { type: Boolean, default: false },
   type: { type: String, required: true, enum: ['Crypt', 'Den', 'Suite', 'Tower'] },
   capacity: { type: Number, required: true, min: 1 },

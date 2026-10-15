@@ -318,12 +318,29 @@
 .admin-reservation-detail-grid dd { margin: 6px 0 0; color: var(--admin-cream); font-size: 10px; line-height: 1.5; overflow-wrap: anywhere; }
 .admin-reservation-cancellation-note { margin-top: 20px; border-left: 2px solid #a1495c; background: rgba(127,32,55,.12); padding: 12px; }
 .admin-reservation-cancellation-note p { margin: 8px 0 0; color: rgba(243,235,221,.76); font-size: 11px; line-height: 1.6; overflow-wrap: anywhere; }
+.admin-reservation-rating,.admin-review-overall > span { display: inline-flex; color: var(--admin-gold); }
+.admin-review-detail-section { display: grid; gap: 10px; margin: 20px 0; border: 1px solid rgba(243,235,221,.12); background: rgba(28,23,33,.65); padding: 14px; }
+.admin-review-detail-heading,.admin-review-overall { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.admin-review-detail-heading h3 { margin: 0; color: var(--admin-gold); font-size: 9px; letter-spacing: .13em; text-transform: uppercase; }
+.admin-review-detail-heading > span { border: 1px solid rgba(196,103,112,.45); padding: 3px 7px; color: #e4a3a8; font-size: 8px; letter-spacing: .1em; text-transform: uppercase; }
+.admin-review-overall { justify-content: flex-start; }
+.admin-review-overall > strong { color: var(--admin-cream); font-size: 12px; }
+.admin-review-display-name { margin: 0; color: rgba(243,235,221,.75); font-size: 10px; }
+.admin-review-categories { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; margin: 0; }
+.admin-review-categories > div { display: flex; justify-content: space-between; gap: 8px; border: 1px solid rgba(243,235,221,.08); padding: 7px; font-size: 9px; }
+.admin-review-categories dt { color: rgba(243,235,221,.55); }
+.admin-review-categories dd { margin: 0; color: var(--admin-cream); }
+.admin-review-detail-section blockquote { margin: 0; border-left: 2px solid var(--admin-gold); padding-left: 10px; color: rgba(243,235,221,.78); font-size: 11px; line-height: 1.6; white-space: pre-wrap; }
+.admin-review-hide-reason { margin: 0; color: #e4a3a8; font-size: 10px; }
+.admin-review-detail-section time { color: rgba(243,235,221,.48); font-size: 9px; }
+.admin-review-detail-section > button { justify-self: start; border: 1px solid rgba(243,235,221,.2); background: rgba(28,23,33,.5); padding: 8px 10px; color: var(--admin-cream); font-size: 9px; text-transform: uppercase; }
 @media (max-width: 760px) {
   .admin-reservations-heading { align-items: flex-start; }
   .admin-reservations-toolbar { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items: end; }
   .admin-reservations-search { grid-column: 1 / -1; min-width: 0; }
   .admin-reservations-filter { min-width: 0; }
   .admin-reservations-sort { grid-column: 1 / -1; }
+  .admin-reservations-reviewed { grid-column: 1 / -1; }
   .admin-reservations-table-wrap { overflow: visible; border: 0; background: transparent; }
   .admin-reservations-table,.admin-reservations-table tbody { display: grid; min-width: 0; gap: 12px; }
   .admin-reservations-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }

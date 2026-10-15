@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ArrowDownUp, CalendarDays, Check, Eye, Pencil, Search, X } from 'lucide-react'
+import { ArrowDownUp, CalendarDays, Check, Eye, Pencil, Search, Star, X } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import DateTimePicker from '../../components/DateTimePicker'
 import SelectControl from '../../components/SelectControl'
@@ -14,6 +14,13 @@ import Toast from '../components/Toast'
 import { adminApi, getAdminErrorMessage } from '../lib/adminApi'
 
 const PAGE_LIMIT = 20
+const REVIEW_CATEGORIES = [
+  ['cleanliness', 'Cleanliness'],
+  ['comfort', 'Comfort'],
+  ['value', 'Value'],
+  ['location', 'Location'],
+  ['hostService', 'Host/Service'],
+]
 const SORT_OPTIONS = [
   ['-createdAt', 'Newest first'],
   ['createdAt', 'Oldest first'],
@@ -47,6 +54,35 @@ function statusLabel(reservation) {
 function ReservationStatusBadge({ reservation }) {
   const status = (reservation.displayStatus || reservation.status || 'upcoming').toLowerCase()
   return <span className={`admin-status-badge admin-status-${status}`}>{statusLabel(reservation)}</span>
+}
+
+function ReviewVisibilityModal({ reservation, visible, onClose, onChanged }) {
+  const [reason, setReason] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  async function updateVisibility() {
+    setBusy(true)
+    setError('')
+    try {
+      const id = reservation._id || reservation.id
+      const { data } = await adminApi.patch(`/reservations/${id}/review/visibility`, { visible, reason })
+      onChanged(data.review)
+    } catch (requestError) {
+      setError(getAdminErrorMessage(requestError, 'Review visibility could not be changed.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+  return <div className="admin-modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && !busy && onClose()}>
+    <section className="admin-confirm-modal admin-reservation-modal" role="alertdialog" aria-modal="true" aria-labelledby="admin-review-visibility-title">
+      <p className="admin-kicker">Review moderation</p>
+      <h2 id="admin-review-visibility-title">{visible ? 'Unhide this review?' : 'Hide this review?'}</h2>
+      <p>{visible ? 'The review will be visible on the room page and included in its average.' : 'The review will no longer appear publicly or count toward the room average.'}</p>
+      {!visible && <label className="admin-reservation-reason">Reason (optional)<textarea rows="3" maxLength="500" value={reason} onChange={(event) => setReason(event.target.value)} /></label>}
+      {error && <p className="admin-reservation-action-error" role="alert">{error}</p>}
+      <div className="admin-modal-actions"><button type="button" onClick={onClose} disabled={busy}>Keep current visibility</button><button type="button" className="danger" onClick={updateVisibility} disabled={busy}>{busy ? 'Saving…' : visible ? 'Unhide review' : 'Hide review'}</button></div>
+    </section>
+  </div>
 }
 
 function ReservationSkeleton() {
@@ -252,7 +288,7 @@ function CompleteReservationModal({ reservation, onClose, onCompleted }) {
   </div>
 }
 
-function ReservationDrawer({ reservation, open, loading, error, onClose }) {
+function ReservationDrawer({ reservation, open, loading, error, onClose, onReviewVisibility }) {
   const room = reservation?.room || { name: reservation?.roomName, slug: reservation?.roomSlug }
   const user = reservation?.user || { name: reservation?.userName, email: reservation?.userEmail }
   return <Drawer open={open} onClose={onClose} label="Reservation details" panelClassName="admin-reservation-drawer-panel">
@@ -285,6 +321,16 @@ function ReservationDrawer({ reservation, open, loading, error, onClose }) {
             </dl>
             {reservation.specialRequests && <section className="admin-reservation-detail-section"><h3>Special requests</h3><p>{reservation.specialRequests}</p></section>}
             {reservation.cancellationReason && <section className="admin-reservation-cancellation-note"><h3>Cancellation reason</h3><p>{reservation.cancellationReason}</p></section>}
+            {reservation.review && <section className="admin-review-detail-section">
+              <div className="admin-review-detail-heading"><h3>Guest review</h3>{reservation.review.status === 'hidden' && <span>Hidden</span>}</div>
+              <div className="admin-review-overall"><strong>{reservation.review.overall}/5</strong><span aria-label={`${reservation.review.overall} out of 5 stars`}>{[1, 2, 3, 4, 5].map((star) => <Star key={star} size={15} fill={star <= reservation.review.overall ? 'currentColor' : 'none'} />)}</span></div>
+              <p className="admin-review-display-name">{reservation.review.showName ? reservation.review.guestFirstName : 'Guest'}</p>
+              <dl className="admin-review-categories">{REVIEW_CATEGORIES.filter(([key]) => reservation.review.categories?.[key]).map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{reservation.review.categories[key]}/5</dd></div>)}</dl>
+              {reservation.review.comment && <blockquote>{reservation.review.comment}</blockquote>}
+              {reservation.review.hideReason && <p className="admin-review-hide-reason">Moderation reason: {reservation.review.hideReason}</p>}
+              <time>Submitted {formatDateTime(reservation.review.createdAt)}</time>
+              <button type="button" onClick={() => onReviewVisibility(reservation, reservation.review.status !== 'hidden')}>{reservation.review.status === 'hidden' ? 'Unhide review' : 'Hide review'}</button>
+            </section>}
           </>}
     </div>
   </Drawer>
@@ -300,6 +346,7 @@ export default function AdminReservationsPage() {
   const from = searchParams.get('from') || ''
   const to = searchParams.get('to') || ''
   const sort = searchParams.get('sort') || '-createdAt'
+  const reviewed = searchParams.get('reviewed') || ''
   const [searchInput, setSearchInput] = useState(searchParam)
   const [result, setResult] = useState(null)
   const [rooms, setRooms] = useState([])
@@ -314,6 +361,7 @@ export default function AdminReservationsPage() {
   const [editReservation, setEditReservation] = useState(null)
   const [cancelReservation, setCancelReservation] = useState(null)
   const [completeReservation, setCompleteReservation] = useState(null)
+  const [reviewVisibility, setReviewVisibility] = useState(null)
 
   useEffect(() => setSearchInput(searchParam), [searchParam])
 
@@ -433,6 +481,7 @@ export default function AdminReservationsPage() {
     { key: 'guests', label: 'Monsters', render: (reservation) => reservation.guests },
     { key: 'total', label: 'Total', render: (reservation) => formatPHP(reservation.totalPrice) },
     { key: 'status', label: 'Status', render: (reservation) => <ReservationStatusBadge reservation={reservation} /> },
+    { key: 'rating', label: 'Rating', render: (reservation) => reservation.review ? <span className="admin-reservation-rating" aria-label={`${reservation.review.overall} out of 5 stars`}>{[1, 2, 3, 4, 5].map((star) => <Star key={star} size={12} fill={star <= reservation.review.overall ? 'currentColor' : 'none'} />)}</span> : <span aria-label="No review">-</span> },
     { key: 'created', label: 'Created', render: (reservation) => formatDateTime(reservation.createdAt) },
     { key: 'actions', label: 'Actions', render: (reservation) => {
       const locked = ['completed', 'cancelled'].includes(reservation.displayStatus || reservation.status)
@@ -465,6 +514,9 @@ export default function AdminReservationsPage() {
       <label className="admin-reservations-filter"><span>Crypt</span><SelectControl value={roomId} onChange={(event) => updateFilters({ roomId: event.target.value })}>
         <option value="">All crypts</option>{rooms.map((room) => <option key={room._id || room.id} value={room._id || room.id}>{room.name}</option>)}
       </SelectControl></label>
+      <label className="admin-reservations-filter admin-reservations-reviewed"><span>Has review</span><SelectControl value={reviewed} onChange={(event) => updateFilters({ reviewed: event.target.value })}>
+        <option value="">All reservations</option><option value="true">Reviewed</option><option value="false">Not reviewed</option>
+      </SelectControl></label>
       <label className="admin-reservations-filter"><span>From</span><input type="date" value={from} onChange={(event) => updateFilters({ from: event.target.value })} /></label>
       <label className="admin-reservations-filter"><span>To</span><input type="date" value={to} onChange={(event) => updateFilters({ to: event.target.value })} /></label>
       <label className="admin-reservations-filter admin-reservations-sort"><span><ArrowDownUp size={12} /> Sort</span><SelectControl value={sort} onChange={(event) => updateFilters({ sort: event.target.value })}>
@@ -476,7 +528,7 @@ export default function AdminReservationsPage() {
     {error && <div className={`admin-dashboard-error admin-reservations-error ${!result ? 'is-fatal' : ''}`} role="alert"><span>{error}</span><button type="button" disabled={loading} onClick={reload}>Retry</button></div>}
 
     {loading && !result ? <ReservationSkeleton /> : !result && error ? null : items.length === 0
-      ? <EmptyState title="No reservations found" description={searchParam || status || roomId || from || to ? 'Try changing your search or filters.' : 'New stays will appear here when a monster reserves a crypt.'} />
+      ? <EmptyState title="No reservations found" description={searchParam || status || roomId || from || to || reviewed ? 'Try changing your search or filters.' : 'New stays will appear here when a monster reserves a crypt.'} />
       : <div className={`admin-reservations-results ${loading ? 'is-loading' : ''}`}>
         <div className="admin-reservations-table-wrap">
           <table className="admin-data-table admin-reservations-table">
@@ -493,10 +545,16 @@ export default function AdminReservationsPage() {
         }} />
       </div>}
 
-    {selected && <ReservationDrawer reservation={selected} open={drawerOpen} loading={drawerLoading} error={drawerError} onClose={() => setDrawerOpen(false)} />}
+    {selected && <ReservationDrawer reservation={selected} open={drawerOpen} loading={drawerLoading} error={drawerError} onClose={() => setDrawerOpen(false)} onReviewVisibility={(reservation, visible) => setReviewVisibility({ reservation, visible })} />}
     {editReservation && <EditDatesModal reservation={editReservation} onClose={() => setEditReservation(null)} onSaved={savedDates} />}
     {cancelReservation && <CancelReservationModal reservation={cancelReservation} onClose={() => setCancelReservation(null)} onCancelled={cancelledReservation} />}
     {completeReservation && <CompleteReservationModal reservation={completeReservation} onClose={() => setCompleteReservation(null)} onCompleted={completedReservation} />}
+    {reviewVisibility && <ReviewVisibilityModal reservation={reviewVisibility.reservation} visible={reviewVisibility.visible} onClose={() => setReviewVisibility(null)} onChanged={(review) => {
+      setSelected((current) => current ? { ...current, review } : current)
+      setReviewVisibility(null)
+      setToast({ type: 'success', message: `Review ${review.status === 'hidden' ? 'hidden' : 'visible'} successfully.` })
+      reload()
+    }} />}
     <Toast message={toast?.message} type={toast?.type} onClose={() => setToast(null)} />
   </section>
 }

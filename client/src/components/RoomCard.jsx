@@ -13,7 +13,7 @@ export default function RoomCard({ room, saved = false, onSaved, featured = fals
   const [isSaved, setIsSaved] = useState(saved)
   const [imageFailed, setImageFailed] = useState(false)
   const image = getRoomImage(room)
-  const rating = Math.max(0, Math.min(5, Number(room.rating ?? 5)))
+  const rating = Math.max(0, Math.min(5, Number(room.reviewCount ? room.reviewAverage : room.rating ?? 5)))
 
   async function toggleSaved(event) {
     event.stopPropagation()
@@ -47,7 +47,7 @@ export default function RoomCard({ room, saved = false, onSaved, featured = fals
         <h3 className="mt-1 font-display text-xl leading-tight">{room.name}</h3>
         {featured ? <p className="mt-2 text-[10px] uppercase tracking-widest text-parchment/65">{room.sizeSqFt ? `${room.sizeSqFt} SQ FT / ` : ''}{room.tagline || 'NOISELESS'}</p> : <div className="mt-3 flex items-center gap-2 text-xs text-parchment/70"><Users size={14} /> Up to {room.capacity} guests</div>}
         <div className="mt-3 flex flex-wrap gap-1">{room.amenities?.slice(0, 3).map((amenity) => <span key={amenity} className="border border-gold/30 px-2 py-1 text-[9px] text-gold">{amenity}</span>)}</div>
-        <div className="mt-4 flex items-center justify-between"><span className="text-xs text-parchment/70">{room.bedsLabel || `Up to ${room.capacity} guests`}</span><span className="flex text-gold" aria-label={`${rating} out of 5 stars`}>{[1, 2, 3, 4, 5].map((star) => <Star key={star} size={12} fill={star <= rating ? 'currentColor' : 'none'} />)}</span></div>
+        <div className="mt-4 flex items-center justify-between"><span className="text-xs text-parchment/70">{room.bedsLabel || `Up to ${room.capacity} guests`}</span><span className="flex text-gold" aria-label={`${rating} out of 5 stars${room.reviewCount ? ` from ${room.reviewCount} reviews` : ''}`}>{[1, 2, 3, 4, 5].map((star) => <Star key={star} size={12} fill={star <= rating ? 'currentColor' : 'none'} />)}</span></div>
         {!featured && <span className="mt-4 inline-block bg-crimson px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-parchment">View Crypt</span>}
       </div>
     </article>

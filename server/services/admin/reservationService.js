@@ -5,6 +5,8 @@ import User from '../../models/User.js'
 import { MIN_STAY_HOURS } from '../../config/defaults.js'
 import { calculatePrice, checkAvailability } from '../reservationService.js'
 import { syncReservationStatuses } from '../reservationLifecycleService.js'
+import Review from '../../models/Review.js'
+import { getReservationReviews } from '../reviewService.js'
 
 const STATUSES = ['upcoming', 'completed', 'cancelled']
 const SORTS = {
@@ -83,6 +85,13 @@ async function buildFilter(query, now) {
     if (!mongoose.isValidObjectId(query.roomId)) throw new AdminReservationError(400, 'A supplied room identifier is invalid.')
     clauses.push({ room: query.roomId })
   }
+  if (query.reviewed !== undefined) {
+    if (query.reviewed !== 'true' && query.reviewed !== 'false') {
+      throw new AdminReservationError(400, 'The reviewed filter must be true or false.')
+    }
+    const reviewedIds = await Review.distinct('reservationId')
+    clauses.push({ _id: query.reviewed === 'true' ? { $in: reviewedIds } : { $nin: reviewedIds } })
+  }
 
   let from = query.from
   let to = query.to
@@ -144,8 +153,12 @@ export async function listAdminReservations(query) {
     ]),
   ])
 
+  const reviewsByReservation = await getReservationReviews(reservations.map((reservation) => reservation._id), new Date(), true)
   return {
-    items: reservations.map(publicReservation),
+    items: reservations.map((reservation) => ({
+      ...publicReservation(reservation),
+      review: reviewsByReservation.get(reservation._id.toString()) || null,
+    })),
     page,
     limit,
     total,
@@ -165,7 +178,12 @@ async function findReservation(id) {
 }
 
 export async function getAdminReservation(id) {
-  return publicReservation(await findReservation(id))
+  const reservation = await findReservation(id)
+  const reviewsByReservation = await getReservationReviews([reservation._id], new Date(), true)
+  return {
+    ...publicReservation(reservation),
+    review: reviewsByReservation.get(reservation._id.toString()) || null,
+  }
 }
 
 function parseDates(checkIn, checkOut) {

@@ -5,6 +5,7 @@ import {
   completeAdminReservation,
   getAdminReservation,
   listAdminReservations,
+  setAdminReviewVisibility,
   updateAdminReservation,
 } from '../../controllers/admin/reservationController.js'
 import { AdminReservationError } from '../../services/admin/reservationService.js'
@@ -24,5 +25,6 @@ router.get('/:id', asyncHandler(getAdminReservation))
 router.patch('/:id/dates', asyncHandler(updateAdminReservation))
 router.patch('/:id/cancel', asyncHandler(cancelAdminReservation))
 router.patch('/:id/complete', asyncHandler(completeAdminReservation))
+router.patch('/:id/review/visibility', asyncHandler(setAdminReviewVisibility))
 
 export default router

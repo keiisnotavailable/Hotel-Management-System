@@ -2,6 +2,7 @@ import Room from '../models/Room.js'
 import Reservation from '../models/Reservation.js'
 import { calculatePrice, checkAvailability, validateReservationInput } from '../services/reservationService.js'
 import { syncReservationStatuses } from '../services/reservationLifecycleService.js'
+import { getReservationReviews } from '../services/reviewService.js'
 
 function publicReservation(reservation) { return reservation.toObject({ versionKey: false }) }
 
@@ -54,7 +55,13 @@ export async function listReservations(req, res) {
     .populate('room')
     .populate('user', 'name email')
     .sort({ checkIn: -1 })
-  return res.json({ reservations: reservations.map(reservationWithSnapshotFallback) })
+  const reviewByReservation = await getReservationReviews(reservations.map((reservation) => reservation._id))
+  return res.json({
+    reservations: reservations.map((reservation) => ({
+      ...reservationWithSnapshotFallback(reservation),
+      review: reviewByReservation.get(reservation._id.toString()) || null,
+    })),
+  })
 }
 
 export async function getReservation(req, res) {
@@ -64,7 +71,13 @@ export async function getReservation(req, res) {
   if (reservationUserId?.toString() !== req.user._id.toString()) return res.status(403).json({ message: 'You do not have access to this reservation.' })
   await syncReservationStatuses({ id: reservation._id })
   reservation = await Reservation.findById(req.params.id).populate('room').populate('user', 'name email')
-  return res.json({ reservation: reservationWithSnapshotFallback(reservation) })
+  const reviewByReservation = await getReservationReviews([reservation._id])
+  return res.json({
+    reservation: {
+      ...reservationWithSnapshotFallback(reservation),
+      review: reviewByReservation.get(reservation._id.toString()) || null,
+    },
+  })
 }
 
 export async function cancelReservation(req, res) {

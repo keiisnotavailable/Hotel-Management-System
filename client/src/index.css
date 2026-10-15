@@ -1260,3 +1260,81 @@ option { background: #17141b; color: #f1eadb; }
 .den { background: linear-gradient(145deg, #41363b, #16151b); }
 .tower { background: linear-gradient(145deg, #403c48, #16151b); }
 .penthouse { background: linear-gradient(145deg, #563c4c, #17131b); }
+
+.review-prompt-banner { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 18px; border: 1px solid rgba(166,129,68,.35); background: #211a20; padding: 18px 54px 18px 20px; color: #f2ebdd; }
+.review-prompt-banner > div > span { display: block; margin-top: 5px; color: rgba(242,235,221,.6); font-size: 11px; }
+.review-prompt-banner > button:not(.review-prompt-dismiss),.guest-rate-button { border: 1px solid rgba(166,129,68,.65); background: #64283d; padding: 10px 14px; color: #f2ebdd; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+.review-prompt-banner > button:hover:not(.review-prompt-dismiss),.guest-rate-button:hover { background: #7b314b; }
+.review-prompt-dismiss { position: absolute; top: 10px; right: 10px; display: grid; place-items: center; border: 0; background: transparent; padding: 5px; color: rgba(242,235,221,.55); }
+.guest-review-rating { display: flex; align-items: center; gap: 12px; }
+.guest-review-rating > span { display: flex; color: #9c7134; }
+.guest-review-rating button { border: 0; background: transparent; color: #713046; font-size: 10px; text-decoration: underline; }
+.review-modal { max-height: calc(100vh - 40px); overflow-y: auto; }
+.review-modal-close { border: 0; background: transparent; padding: 4px; color: rgba(242,235,221,.65); }
+.review-stay-summary { display: flex; align-items: center; gap: 12px; margin: 22px 0; border: 1px solid rgba(242,235,221,.15); padding: 9px; }
+.review-stay-summary img,.review-stay-placeholder { width: 74px; height: 58px; flex: 0 0 auto; object-fit: cover; }
+.review-stay-placeholder { display: grid; place-items: center; background: #302532; color: #b5925d; font-size: 25px; }
+.review-stay-summary div { display: grid; gap: 6px; min-width: 0; }
+.review-stay-summary strong { font: 18px Georgia,serif; }
+.review-stay-summary div span { color: rgba(242,235,221,.62); font-size: 10px; }
+.review-rating-field { min-width: 0; border: 0; margin: 0; padding: 0; }
+.review-rating-field legend,.review-comment-label { color: #f2ebdd; font-size: 11px; }
+.review-rating-field legend span { color: #d18385; }
+.review-star-options { display: flex; align-items: center; gap: 5px; min-height: 35px; }
+.review-star-options button { display: grid; place-items: center; border: 0; background: transparent; padding: 3px; color: rgba(242,235,221,.3); }
+.review-star-options button.selected,.review-star-options button:hover,.review-star-options button:focus-visible { color: #c6a05d; }
+.review-star-options button:focus-visible,.review-modal-close:focus-visible { outline: 2px solid #c6a05d; outline-offset: 2px; }
+.review-rating-label { margin-left: 5px; color: rgba(242,235,221,.6); font-size: 10px; }
+.review-required-hint { margin: 0; color: #d99a9a; font-size: 10px; }
+.review-category-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px 12px; margin-top: 17px; border-top: 1px solid rgba(242,235,221,.12); padding-top: 15px; }
+.review-category-grid .review-star-options { gap: 1px; }
+.review-category-grid .review-star-options button { padding: 2px; }
+.review-comment-label { display: block; margin-top: 18px; }
+.review-comment-label > span { color: rgba(242,235,221,.48); }
+.review-comment-label textarea { display: block; width: 100%; margin-top: 7px; resize: vertical; border: 1px solid rgba(242,235,221,.2); outline: none; background: #0f0b14; padding: 10px; color: #f2ebdd; font-size: 12px; }
+.review-comment-label textarea:focus { border-color: #c6a05d; }
+.review-character-count { margin: 4px 0 0; color: rgba(242,235,221,.5); text-align: right; font-size: 10px; }
+.review-name-toggle { display: flex; align-items: center; gap: 8px; margin-top: 14px; color: rgba(242,235,221,.75); font-size: 11px; }
+.review-name-toggle input { accent-color: #713046; }
+.review-form-error { margin: 14px 0 0; color: #e19a9a; font-size: 12px; }
+.review-modal-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 9px; margin-top: 20px; }
+.review-modal-actions button { border: 1px solid rgba(242,235,221,.2); padding: 9px 12px; color: #f2ebdd; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+.review-modal-actions .review-delete-button { margin-right: auto; border-color: rgba(193,87,99,.6); color: #e5a0a4; }
+.review-modal-actions .review-submit-button { border-color: #713046; background: #713046; }
+.review-modal-actions button:disabled { cursor: not-allowed; opacity: .5; }
+.room-reviews-section { margin-top: 54px; border-top: 1px solid rgba(26,22,28,.16); padding-top: 30px; }
+.room-reviews-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; }
+.room-reviews-heading h2 { margin-top: 5px; font: 32px Georgia,serif; text-transform: uppercase; }
+.room-reviews-heading label { display: grid; gap: 5px; color: rgba(26,22,28,.6); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
+.room-reviews-heading select { min-width: 145px; border: 1px solid rgba(26,22,28,.2); background: rgba(255,255,255,.5); padding: 8px; color: #1a161c; font-size: 11px; letter-spacing: normal; text-transform: none; }
+.room-review-summary { display: grid; grid-template-columns: minmax(150px,.75fr) minmax(220px,1fr); gap: 30px; margin: 22px 0; border: 1px solid rgba(26,22,28,.12); background: rgba(255,255,255,.35); padding: 18px; }
+.room-review-average { display: grid; align-content: center; justify-items: center; gap: 5px; }
+.room-review-average > strong { font: 44px Georgia,serif; }
+.room-review-average > span:last-child { color: rgba(26,22,28,.58); font-size: 11px; }
+.review-stars-static { display: inline-flex; color: #9c7134; }
+.room-review-distribution { display: grid; align-content: center; gap: 6px; }
+.room-review-distribution > div { display: grid; grid-template-columns: 44px minmax(50px,1fr) 20px; align-items: center; gap: 9px; color: rgba(26,22,28,.65); font-size: 10px; }
+.review-distribution-track { height: 7px; overflow: hidden; background: rgba(26,22,28,.1); }
+.review-distribution-track > span { display: block; height: 100%; background: #9c7134; }
+.room-review-card { border-bottom: 1px solid rgba(26,22,28,.14); padding: 18px 2px; }
+.room-review-card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 15px; }
+.room-review-card-heading > div:first-child,.room-review-card-heading > div:last-child { display: grid; gap: 5px; }
+.room-review-card-heading > div:last-child { justify-items: end; }
+.room-review-card-heading strong { font: 17px Georgia,serif; }
+.room-review-card-heading span:not(.review-stars-static),.room-review-card-heading time { color: rgba(26,22,28,.58); font-size: 10px; }
+.room-review-card p { margin: 12px 0 0; color: rgba(26,22,28,.78); font-size: 13px; line-height: 1.7; white-space: pre-wrap; }
+.room-review-card small { display: block; margin-top: 7px; color: rgba(26,22,28,.48); font-size: 9px; }
+.room-reviews-message,.room-reviews-error { margin: 22px 0; font-size: 12px; }
+.room-reviews-error { color: #8f3045; }
+.room-reviews-pagination { display: flex; align-items: center; justify-content: center; gap: 18px; padding-top: 20px; font-size: 11px; }
+.room-reviews-pagination button { border: 1px solid rgba(26,22,28,.2); background: rgba(255,255,255,.4); padding: 8px 12px; }
+.room-reviews-pagination button:disabled { cursor: not-allowed; opacity: .45; }
+@media (max-width: 600px) {
+  .review-prompt-banner { align-items: flex-start; flex-direction: column; }
+  .review-prompt-banner > button:not(.review-prompt-dismiss) { width: 100%; }
+  .review-category-grid { grid-template-columns: 1fr; }
+  .room-reviews-heading { align-items: flex-start; flex-direction: column; }
+  .room-review-summary { grid-template-columns: 1fr; gap: 20px; }
+  .room-review-card-heading { flex-direction: column; }
+  .room-review-card-heading > div:last-child { justify-items: start; }
+}

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Menu } from 'lucide-react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { markAdminSignOut } from './AdminRoute'
 import logo from '../../images/logo.png'
 import Drawer from './Drawer'
 import '../styles/admin.css'
@@ -32,6 +33,7 @@ export default function AdminLayout() {
   const closeDrawer = useCallback(() => setDrawerOpen(false), [])
 
   function logout() {
+    markAdminSignOut(location.key)
     signOut()
     navigate('/', { replace: true })
   }

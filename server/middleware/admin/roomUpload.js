@@ -4,19 +4,28 @@ import multer from 'multer'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const uploadDirectory = fileURLToPath(new URL('../../uploads/', import.meta.url))
+const uploadDirectory = process.env.VERCEL ? null : fileURLToPath(new URL('../../uploads/', import.meta.url))
 const extensionsByMimeType = {
   'image/jpeg': '.jpg',
   'image/png': '.png',
   'image/webp': '.webp',
 }
 
-mkdirSync(uploadDirectory, { recursive: true })
+const hasAnyCloudinaryConfig = [
+  process.env.CLOUDINARY_CLOUD_NAME,
+  process.env.CLOUDINARY_API_KEY,
+  process.env.CLOUDINARY_API_SECRET,
+].some(Boolean)
+const useMemoryStorage = Boolean(process.env.VERCEL || hasAnyCloudinaryConfig)
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, callback) => callback(null, uploadDirectory),
-  filename: (_req, file, callback) => callback(null, `${randomUUID()}${extensionsByMimeType[file.mimetype]}`),
-})
+let storage = multer.memoryStorage()
+if (!useMemoryStorage) {
+  mkdirSync(uploadDirectory, { recursive: true })
+  storage = multer.diskStorage({
+    destination: (_req, _file, callback) => callback(null, uploadDirectory),
+    filename: (_req, file, callback) => callback(null, `${randomUUID()}${extensionsByMimeType[file.mimetype]}`),
+  })
+}
 
 export const uploadRoomImage = multer({
   storage,

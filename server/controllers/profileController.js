@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs'
 import mongoose from 'mongoose'
 import User from '../models/User.js'
 import Room from '../models/Room.js'
+import { uploadImage } from '../services/imageUploadService.js'
 
 function publicUser(user) {
   return { id: user._id, name: user.name, email: user.email, role: user.role, centuryLoyaltyPoints: user.centuryLoyaltyPoints, phone: user.phone, address: user.address, profileImage: user.profileImage, preferences: user.preferences }
@@ -11,7 +12,7 @@ export function getProfile(req, res) { return res.json({ user: publicUser(req.us
 
 export async function uploadProfilePhoto(req, res) {
   if (!req.file) return res.status(400).json({ message: 'An image file is required in the "image" field.' })
-  req.user.profileImage = `/uploads/${req.file.filename}`
+  req.user.profileImage = await uploadImage(req.file, 'moonstoria/profiles')
   await req.user.save()
   return res.status(201).json({ user: publicUser(req.user) })
 }

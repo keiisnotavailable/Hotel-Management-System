@@ -9,6 +9,7 @@ const imageMap = Object.fromEntries(Object.entries(imageModules).map(([path, ima
 export function getRoomImages(room) {
   const images = room?.images?.length ? room.images : [room?.slug?.replace(/^the-/, '')]
   return images.map((image) => {
+    if (/^https?:\/\//i.test(image || '')) return image
     if (image?.startsWith('/uploads/')) return new URL(image, new URL(API_BASE, window.location.origin)).toString()
     return imageMap[image]
   }).filter(Boolean)

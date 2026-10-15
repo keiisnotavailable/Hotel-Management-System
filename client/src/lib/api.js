@@ -1,9 +1,14 @@
 import axios from 'axios'
 
-export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+const configuredApiUrl = import.meta.env.VITE_API_URL
+const apiOrigin = configuredApiUrl || (import.meta.env.DEV ? 'http://localhost:5000' : '')
+export const API_BASE = apiOrigin
+  ? `${apiOrigin.replace(/\/+$/, '').replace(/\/api$/i, '')}/api`
+  : '/api'
 
 export function getUploadedAssetUrl(path) {
   if (!path) return ''
+  if (/^https?:\/\//i.test(path)) return path
   return path.startsWith('/uploads/')
     ? new URL(path, new URL(API_BASE, window.location.origin)).toString()
     : path

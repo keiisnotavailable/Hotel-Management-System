@@ -1,18 +1,32 @@
-import { randomUUID } from 'node:crypto'
-import { access, readFile, readdir, rm } from 'node:fs/promises'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import mongoose from 'mongoose'
 import Reservation from '../../models/Reservation.js'
 import Room from '../../models/Room.js'
 import User from '../../models/User.js'
 import { syncReservationStatuses } from '../reservationLifecycleService.js'
+import { uploadImage } from '../imageUploadService.js'
 
 const ROOM_TYPES = ['Crypt', 'Den', 'Suite', 'Tower']
 const ROOM_STATUSES = ['available', 'maintenance']
-const IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp'])
-const uploadsDirectory = fileURLToPath(new URL('../../uploads/', import.meta.url))
-const imageDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../client/src/images')
+const ROOM_IMAGE_KEYS = [
+  'about-castle-interior',
+  'blob-lagoon-suite',
+  'frankenstein-lab-den',
+  'haunted-tower-crypt',
+  'hotel-homepage',
+  'keeper-bram-hollow',
+  'keeper-elara-thorn',
+  'keeper-mara-vesper',
+  'logo',
+  'moonstoria-about-hero',
+  'moonstoria-makiling-location',
+  'mummy-tomb-crypt',
+  'royal-coffin-penthouse',
+  'skeleton-tower',
+  'vampire-suite',
+  'werewolf-burrow',
+  'werewolves-family-den',
+  'witch-attic',
+]
 const editableFields = [
   'name', 'slug', 'type', 'category', 'tagline', 'sizeSqFt', 'bedsLabel',
   'rating', 'featured', 'description', 'pricePerNight', 'capacity',
@@ -105,17 +119,17 @@ async function uniqueSlug(base, excludeId) {
 
 async function validateImages(images) {
   if (!images) return
-  const keys = new Set(await getRoomImageKeys())
+  const keys = new Set(ROOM_IMAGE_KEYS)
   for (const image of images) {
     if (keys.has(image)) continue
-    if (!/^\/uploads\/[0-9a-f-]+\.(?:jpg|jpeg|png|webp)$/i.test(image)) {
-      throw new RoomServiceError(400, `Unknown room image: ${image}`)
-    }
     try {
-      await access(path.join(uploadsDirectory, path.basename(image)))
+      const url = new URL(image)
+      if (url.protocol === 'http:' || url.protocol === 'https:') continue
     } catch {
-      throw new RoomServiceError(400, `Uploaded room image does not exist: ${image}`)
+      // Non-URL image keys are validated below.
     }
+    if (!process.env.VERCEL && /^\/uploads\/[0-9a-f-]+\.(?:jpg|jpeg|png|webp)$/i.test(image)) continue
+    throw new RoomServiceError(400, `Unknown room image: ${image}`)
   }
 }
 
@@ -311,27 +325,14 @@ export async function deleteAdminRoom(id) {
 }
 
 export async function getRoomImageKeys() {
-  const files = await readdir(imageDirectory, { withFileTypes: true })
-  return files
-    .filter((file) => file.isFile() && IMAGE_EXTENSIONS.has(path.extname(file.name).toLowerCase()))
-    .map((file) => path.basename(file.name, path.extname(file.name)))
-    .sort()
-}
-
-const signatures = {
-  '.jpg': (bytes) => bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff,
-  '.jpeg': (bytes) => bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff,
-  '.png': (bytes) => bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])),
-  '.webp': (bytes) => bytes.toString('ascii', 0, 4) === 'RIFF' && bytes.toString('ascii', 8, 12) === 'WEBP',
+  return [...ROOM_IMAGE_KEYS].sort()
 }
 
 export async function validateUploadedImage(file) {
-  const extension = path.extname(file.filename).toLowerCase()
-  const bytes = await readFile(file.path)
-  const isValid = signatures[extension] && signatures[extension](bytes)
-  if (!isValid) {
-    await rm(file.path, { force: true })
-    throw new RoomServiceError(400, 'Uploaded file is not a valid JPG, PNG, or WebP image.')
+  try {
+    return await uploadImage(file, 'moonstoria/rooms')
+  } catch (error) {
+    if (error.statusCode) throw new RoomServiceError(error.statusCode, error.message)
+    throw error
   }
-  return `/uploads/${file.filename}`
 }

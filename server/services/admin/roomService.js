@@ -122,7 +122,12 @@ async function validateImages(images) {
   const keys = new Set(ROOM_IMAGE_KEYS)
   for (const image of images) {
     if (keys.has(image)) continue
-    if (/^https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/.+/i.test(image)) continue
+    try {
+      const url = new URL(image)
+      if (url.protocol === 'http:' || url.protocol === 'https:') continue
+    } catch {
+      // Non-URL image keys are validated below.
+    }
     if (!process.env.VERCEL && /^\/uploads\/[0-9a-f-]+\.(?:jpg|jpeg|png|webp)$/i.test(image)) continue
     throw new RoomServiceError(400, `Unknown room image: ${image}`)
   }
